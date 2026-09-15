@@ -1,0 +1,22 @@
+-- Hourly weather snapshot schedule. Run once in the SQL editor after
+-- deploying the `snapshot` edge function. Replace the two placeholders.
+-- Enable pg_cron and pg_net first: Dashboard → Database → Extensions.
+
+create extension if not exists pg_cron;
+create extension if not exists pg_net;
+
+select cron.schedule(
+  'ankesi-snapshot-hourly',
+  '7 * * * *',
+  $$
+  select net.http_post(
+    url := 'https://<PROJECT_REF>.supabase.co/functions/v1/snapshot',
+    headers := '{"Content-Type": "application/json", "x-cron-secret": "<CRON_SECRET>"}'::jsonb,
+    body := '{}'::jsonb
+  );
+  $$
+);
+
+-- To inspect or remove:
+-- select * from cron.job;
+-- select cron.unschedule('ankesi-snapshot-hourly');
