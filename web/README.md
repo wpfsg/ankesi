@@ -24,6 +24,20 @@ npm run dev &
 node scripts/verify.mjs http://localhost:5173 ./shots
 ```
 
+## Deployment
+
+Every push to `main` builds and publishes the app to GitHub Pages through
+`.github/workflows/pages.yml`: https://wpfsg.github.io/ankesi/
+
+- The build runs with `VITE_BASE=/ankesi/` so assets and language URLs live
+  under the project path. On a custom domain set `VITE_BASE=/` and add a
+  `CNAME` file to `public/`.
+- Pages has no SPA rewrites, so the build copies `index.html` to `404.html`;
+  deep links such as `/ankesi/en` load the app.
+- To enable accounts on the live site, add `VITE_SUPABASE_URL` and
+  `VITE_SUPABASE_ANON_KEY` as repository secrets and add the Pages origin to
+  the Supabase redirect URLs.
+
 ## Where the data comes from
 
 | Data | Source | Real or estimate |

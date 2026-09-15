@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { hasBackend, supabase } from './supabase'
-import type { Lang } from '../i18n'
+import { langPath, type Lang } from '../i18n'
 
 export function useSession(): { session: Session | null; user: User | null; ready: boolean } {
   const [session, setSession] = useState<Session | null>(null)
@@ -21,7 +21,7 @@ export function useSession(): { session: Session | null; user: User | null; read
 }
 
 function redirectTo(lang: Lang): string {
-  return `${window.location.origin}/${lang}`
+  return `${window.location.origin}${langPath(lang)}`
 }
 
 export async function signInWithEmail(email: string, lang: Lang): Promise<string | null> {

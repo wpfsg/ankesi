@@ -8,13 +8,27 @@ export const LANGS: Lang[] = ['ka', 'en']
 
 const STORAGE_KEY = 'ankesi.lang'
 
+/** Deployment base path without trailing slash: "" locally, "/ankesi" on
+ *  the GitHub project page. */
+export const BASE = import.meta.env.BASE_URL.replace(/\/$/, '')
+
 function isLang(v: unknown): v is Lang {
   return v === 'ka' || v === 'en'
 }
 
+/** Path without the deployment base, e.g. "/en/foo". */
+function appPath(pathname: string): string {
+  return BASE && pathname.startsWith(BASE) ? pathname.slice(BASE.length) || '/' : pathname
+}
+
+/** Absolute path for a language root, e.g. "/ankesi/en". */
+export function langPath(lang: Lang): string {
+  return `${BASE}/${lang}`
+}
+
 /** URL path prefix wins, then saved choice, then browser language, then Georgian. */
 export function detectLang(): Lang {
-  const first = window.location.pathname.split('/')[1]
+  const first = appPath(window.location.pathname).split('/')[1]
   if (isLang(first)) return first
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
@@ -36,8 +50,8 @@ export function applyLang(lang: Lang) {
     // storage unavailable
   }
   const { pathname, search, hash } = window.location
-  const rest = pathname.replace(/^\/(ka|en)(?=\/|$)/, '')
-  const next = `/${lang}${rest}${search}${hash}`
+  const rest = appPath(pathname).replace(/^\/(ka|en)(?=\/|$)/, '').replace(/^\/$/, '')
+  const next = `${langPath(lang)}${rest}${search}${hash}`
   if (next !== `${pathname}${search}${hash}`) {
     window.history.replaceState(null, '', next)
   }
