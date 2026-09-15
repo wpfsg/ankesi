@@ -29,11 +29,8 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
 
-      - name: Enable Pages
-        id: pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
+      # Pages must be enabled once in Settings → Pages with source "GitHub Actions".
+      - uses: actions/configure-pages@v5
 
       - run: npm ci
 
