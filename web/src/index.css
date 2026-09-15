@@ -257,7 +257,7 @@ button {
   left: 0;
   right: 0;
   z-index: 12;
-  padding: calc(env(safe-area-inset-top, 0px) + 10px) 12px 10px;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 12px;
   border-top: 0;
   border-left: 0;
   border-right: 0;
@@ -267,9 +267,19 @@ button {
 .header-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+@media (min-width: 720px) {
+  .header {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .header-row {
+    gap: 14px;
+  }
 }
 
 .brand {
@@ -286,7 +296,7 @@ button {
   display: none;
 }
 
-@media (min-width: 400px) {
+@media (min-width: 480px) {
   .brand-name {
     display: inline;
   }
@@ -297,11 +307,23 @@ button {
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   height: 42px;
-  padding: 0 12px;
+  margin: 0 6px;
+  padding: 0 16px;
   border-radius: var(--radius-md);
   background: var(--glass-line);
+}
+
+@media (min-width: 720px) {
+  .search {
+    margin: 0 14px;
+    max-width: 560px;
+  }
+  /* keep the controls flush right when the search field is capped */
+  .icon-toggle {
+    margin-left: auto;
+  }
 }
 
 .search input {
