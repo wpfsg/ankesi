@@ -1,0 +1,771 @@
+/* "The Cast" loader. One loop = var(--loop). The first loop is preceded by
+   the rod unfolding (var(--unfold)); loop animations are delayed by that
+   much and use fill-mode backwards so their 0% state shows meanwhile.
+
+   Loop timeline (percent of 3.6 s):
+     0–16  cast: rod back, then whip forward
+    16–42  line draws out, float flies the arc
+    42–58  splash: ripples, droplets, float settles and bobs
+    58–82  bite: fish rises, float dips, line taut, rod pulled
+    82–100 reset */
+
+.splash {
+  --loop: 3.6s;
+  --unfold: 0.9s;
+  --ease-spring: cubic-bezier(0.2, 0.9, 0.3, 1.15);
+  --rod: var(--fg);
+  --rod-2: var(--fg-2);
+  --water-1: color-mix(in srgb, var(--accent) 34%, transparent);
+  --water-2: color-mix(in srgb, var(--accent) 58%, transparent);
+  --water-3: color-mix(in srgb, var(--accent) 18%, transparent);
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--bg);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.splash-card {
+  width: min(86vw, 440px);
+  border-radius: var(--radius-lg);
+  padding: 22px 22px 26px;
+  text-align: center;
+}
+
+.cast {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: hidden; /* waves are drawn 2× wide and slide; clip to the scene */
+  border-radius: var(--radius-md);
+}
+
+/* ---------- water ---------- */
+
+.water-top {
+  stop-color: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.water-bottom {
+  stop-color: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.wave {
+  will-change: transform;
+}
+.wave-back {
+  fill: var(--water-1);
+  animation: wave-slide 7s linear infinite;
+}
+.wave-front {
+  fill: var(--water-2);
+  animation: wave-slide 4.6s linear infinite reverse;
+}
+
+@keyframes wave-slide {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-320px);
+  }
+}
+
+/* ---------- shore + rod ---------- */
+
+.shore {
+  fill: var(--glass-line);
+}
+
+.rod {
+  transform-origin: 40px 150px;
+  transform: rotate(35deg);
+  will-change: transform;
+  animation: cast var(--loop) ease-in-out infinite both;
+  animation-delay: var(--unfold);
+}
+
+.handle {
+  stroke: var(--rod-2);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+.reel {
+  fill: var(--rod-2);
+}
+
+.seg line {
+  stroke: var(--rod);
+  stroke-linecap: round;
+}
+.seg1 line {
+  stroke-width: 4.2;
+}
+.seg2 line {
+  stroke-width: 3.2;
+}
+.seg3 line {
+  stroke-width: 2.4;
+}
+.seg4 line {
+  stroke-width: 1.7;
+}
+
+.guide {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1;
+  animation: pop 0.25s var(--ease-spring) both;
+}
+
+/* telescopic unfold: each segment slides out from the handle once */
+.seg2 {
+  transform: translate(0, -38px);
+  animation: unfold2 0.4s var(--ease-spring) both;
+  animation-delay: 0.15s;
+}
+.seg3 {
+  transform: translate(0, -66px);
+  animation: unfold3 0.4s var(--ease-spring) both;
+  animation-delay: 0.35s;
+}
+.seg4 {
+  transform: translate(0, -88px);
+  animation: unfold4 0.4s var(--ease-spring) both;
+  animation-delay: 0.55s;
+}
+.seg1 .guide {
+  animation-delay: 0.1s;
+}
+.seg2 .guide {
+  animation-delay: 0.45s;
+}
+.seg3 .guide {
+  animation-delay: 0.65s;
+}
+.seg4 .guide {
+  animation-delay: 0.85s;
+}
+
+@keyframes unfold2 {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(0, -38px);
+  }
+}
+@keyframes unfold3 {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(0, -66px);
+  }
+}
+@keyframes unfold4 {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(0, -88px);
+  }
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* tip flex lags the cast */
+.tip {
+  transform-origin: 40px 110px;
+  animation: flex var(--loop) ease-in-out infinite both;
+  animation-delay: var(--unfold);
+}
+
+@keyframes cast {
+  0% {
+    transform: rotate(35deg);
+  }
+  6% {
+    transform: rotate(-4deg);
+  }
+  15% {
+    transform: rotate(62deg);
+  }
+  21% {
+    transform: rotate(47deg);
+  }
+  28%,
+  57% {
+    transform: rotate(50deg);
+  }
+  62% {
+    transform: rotate(59deg);
+  }
+  66% {
+    transform: rotate(52deg);
+  }
+  70% {
+    transform: rotate(58deg);
+  }
+  78% {
+    transform: rotate(50deg);
+  }
+  90%,
+  100% {
+    transform: rotate(35deg);
+  }
+}
+
+@keyframes flex {
+  0%,
+  3% {
+    transform: rotate(0deg);
+  }
+  9% {
+    transform: rotate(-16deg);
+  }
+  17% {
+    transform: rotate(18deg);
+  }
+  23% {
+    transform: rotate(-5deg);
+  }
+  29%,
+  59% {
+    transform: rotate(0deg);
+  }
+  63% {
+    transform: rotate(12deg);
+  }
+  67% {
+    transform: rotate(3deg);
+  }
+  71% {
+    transform: rotate(10deg);
+  }
+  80%,
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+/* ---------- line ---------- */
+
+.line {
+  fill: none;
+  stroke: var(--fg-2);
+  stroke-width: 0.9;
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  animation-duration: var(--loop);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+  animation-delay: var(--unfold);
+}
+.line-arc {
+  animation-name: line-arc;
+}
+.line-taut {
+  animation-name: line-taut;
+}
+
+@keyframes line-arc {
+  0%,
+  15% {
+    opacity: 0;
+    stroke-dashoffset: 100;
+  }
+  16% {
+    opacity: 1;
+    stroke-dashoffset: 100;
+  }
+  42% {
+    stroke-dashoffset: 0;
+  }
+  59% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+  61%,
+  100% {
+    opacity: 0;
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes line-taut {
+  0%,
+  60% {
+    opacity: 0;
+  }
+  62%,
+  81% {
+    opacity: 1;
+  }
+  84%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ---------- float ---------- */
+
+.float {
+  transform: translate(240px, 138px);
+  will-change: transform, opacity;
+  animation: float-flight var(--loop) ease-in-out infinite both;
+  animation-delay: var(--unfold);
+}
+.float-stem {
+  stroke: var(--fg);
+  stroke-width: 1;
+}
+.float-body {
+  fill: var(--band-slow);
+}
+.float-belly {
+  fill: #fff;
+}
+.float-tip {
+  fill: var(--band-dead);
+}
+
+@keyframes float-flight {
+  0%,
+  15% {
+    transform: translate(124px, 79px);
+    opacity: 0;
+  }
+  16% {
+    transform: translate(124px, 79px);
+    opacity: 1;
+  }
+  22% {
+    transform: translate(160px, 44px);
+  }
+  30% {
+    transform: translate(200px, 40px);
+  }
+  36% {
+    transform: translate(228px, 82px);
+  }
+  42% {
+    transform: translate(240px, 138px);
+  }
+  46% {
+    transform: translate(240px, 134px);
+  }
+  50% {
+    transform: translate(240px, 139px);
+  }
+  54% {
+    transform: translate(240px, 135px);
+  }
+  58% {
+    transform: translate(240px, 138px);
+  }
+  62% {
+    transform: translate(240px, 153px);
+  }
+  66% {
+    transform: translate(240px, 143px);
+  }
+  70% {
+    transform: translate(240px, 155px);
+  }
+  76% {
+    transform: translate(240px, 150px);
+  }
+  82% {
+    transform: translate(240px, 150px);
+    opacity: 1;
+  }
+  88%,
+  100% {
+    transform: translate(240px, 162px);
+    opacity: 0;
+  }
+}
+
+/* ---------- splash effects ---------- */
+
+.ripple {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation-duration: var(--loop);
+  animation-timing-function: ease-out;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+  animation-delay: var(--unfold);
+}
+.r1 {
+  animation-name: ripple1;
+}
+.r2 {
+  animation-name: ripple2;
+}
+.r3 {
+  animation-name: ripple3;
+}
+
+@keyframes ripple1 {
+  0%,
+  41% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  42% {
+    transform: scale(0.15);
+    opacity: 0.9;
+  }
+  58% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+  61% {
+    transform: scale(0.15);
+    opacity: 0.8;
+  }
+  74%,
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+@keyframes ripple2 {
+  0%,
+  44% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  45% {
+    transform: scale(0.15);
+    opacity: 0.7;
+  }
+  61%,
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+@keyframes ripple3 {
+  0%,
+  47% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  48% {
+    transform: scale(0.15);
+    opacity: 0.5;
+  }
+  64%,
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+.drop {
+  fill: var(--accent);
+  animation-duration: var(--loop);
+  animation-timing-function: ease-out;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+  animation-delay: var(--unfold);
+}
+.d1 {
+  animation-name: drop1;
+}
+.d2 {
+  animation-name: drop2;
+}
+.d3 {
+  animation-name: drop3;
+}
+
+@keyframes drop1 {
+  0%,
+  41% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  42% {
+    opacity: 1;
+  }
+  49% {
+    transform: translate(-10px, -16px);
+    opacity: 1;
+  }
+  55%,
+  100% {
+    transform: translate(-14px, -2px);
+    opacity: 0;
+  }
+}
+@keyframes drop2 {
+  0%,
+  41% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  42% {
+    opacity: 1;
+  }
+  49% {
+    transform: translate(9px, -20px);
+    opacity: 1;
+  }
+  56%,
+  100% {
+    transform: translate(13px, -2px);
+    opacity: 0;
+  }
+}
+@keyframes drop3 {
+  0%,
+  41% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  42% {
+    opacity: 1;
+  }
+  48% {
+    transform: translate(1px, -24px);
+    opacity: 1;
+  }
+  54%,
+  100% {
+    transform: translate(2px, -2px);
+    opacity: 0;
+  }
+}
+
+/* ---------- fish + bubbles ---------- */
+
+.fish {
+  fill: var(--accent);
+  opacity: 0;
+  transform: translate(200px, 200px);
+  will-change: transform, opacity;
+  animation: fish-bite var(--loop) ease-in-out infinite both;
+  animation-delay: var(--unfold);
+}
+.fish-eye {
+  fill: var(--bg);
+}
+
+@keyframes fish-bite {
+  0%,
+  52% {
+    transform: translate(196px, 200px);
+    opacity: 0;
+  }
+  56% {
+    transform: translate(220px, 190px);
+    opacity: 0.85;
+  }
+  60% {
+    transform: translate(236px, 164px);
+  }
+  63% {
+    transform: translate(240px, 153px);
+  }
+  68% {
+    transform: translate(242px, 160px);
+  }
+  72% {
+    transform: translate(238px, 156px);
+  }
+  78% {
+    transform: translate(246px, 168px);
+    opacity: 0.85;
+  }
+  86%,
+  100% {
+    transform: translate(262px, 200px);
+    opacity: 0;
+  }
+}
+
+.bubble {
+  fill: var(--accent);
+  opacity: 0;
+  animation-duration: var(--loop);
+  animation-timing-function: ease-out;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+  animation-delay: var(--unfold);
+}
+.b1 {
+  animation-name: bubble1;
+}
+.b2 {
+  animation-name: bubble2;
+}
+.b3 {
+  animation-name: bubble3;
+}
+
+@keyframes bubble1 {
+  0%,
+  62% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  64% {
+    opacity: 0.7;
+  }
+  78%,
+  100% {
+    opacity: 0;
+    transform: translateY(-11px);
+  }
+}
+@keyframes bubble2 {
+  0%,
+  66% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  68% {
+    opacity: 0.6;
+  }
+  82%,
+  100% {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+@keyframes bubble3 {
+  0%,
+  70% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  72% {
+    opacity: 0.6;
+  }
+  86%,
+  100% {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+}
+
+/* ---------- text ---------- */
+
+.splash-brand {
+  margin-top: 6px;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  background: linear-gradient(90deg, var(--fg) 0%, var(--accent) 40%, var(--fg) 60%, var(--fg) 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 3.2s linear infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 125% 0;
+  }
+  to {
+    background-position: -125% 0;
+  }
+}
+
+.splash-tagline {
+  margin-top: 4px;
+  color: var(--fg-2);
+  font-size: 14px;
+}
+
+.splash-status {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--fg-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dots {
+  display: inline-flex;
+  gap: 3px;
+}
+.dots span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--fg-3);
+  animation: dot 1.2s ease-in-out infinite;
+}
+.dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dot {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+/* ---------- reduced motion: rod extended, float bobbing, nothing else ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .splash * {
+    animation: none !important;
+  }
+  .rod {
+    transform: rotate(50deg);
+  }
+  .line-arc {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+  .line-taut,
+  .fish,
+  .bubble,
+  .drop,
+  .ripple {
+    opacity: 0;
+  }
+  .float {
+    opacity: 1;
+    animation: bob 3s ease-in-out infinite !important;
+  }
+  @keyframes bob {
+    0%,
+    100% {
+      transform: translate(240px, 138px);
+    }
+    50% {
+      transform: translate(240px, 135px);
+    }
+  }
+}

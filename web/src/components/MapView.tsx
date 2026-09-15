@@ -14,6 +14,8 @@ interface Props {
   results: Record<string, SpotResult>
   selectedId: string | null
   onSelect: (id: string | null) => void
+  /** Fires once the style has loaded and the first frame rendered. */
+  onReady?: () => void
 }
 
 interface Entry {
@@ -36,17 +38,19 @@ function makeBubble(type: string, label: string): { wrap: HTMLDivElement; bubble
   return { wrap, bubble }
 }
 
-export function MapView({ spots, results, selectedId, onSelect }: Props) {
+export function MapView({ spots, results, selectedId, onSelect, onReady }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const entries = useRef<Map<string, Entry>>(new Map())
   const clusterMarkers = useRef<Marker[]>([])
   const resultsRef = useRef(results)
   const onSelectRef = useRef(onSelect)
+  const onReadyRef = useRef(onReady)
 
   useEffect(() => {
     onSelectRef.current = onSelect
-  }, [onSelect])
+    onReadyRef.current = onReady
+  }, [onSelect, onReady])
 
   useEffect(() => {
     resultsRef.current = results
@@ -121,7 +125,10 @@ export function MapView({ spots, results, selectedId, onSelect }: Props) {
     map.touchZoomRotate.disableRotation()
     map.on('click', () => onSelectRef.current(null))
     map.on('moveend', recluster)
-    map.on('load', recluster)
+    map.on('load', () => {
+      recluster()
+      map.once('idle', () => onReadyRef.current?.())
+    })
     mapRef.current = map
     return () => {
       map.remove()

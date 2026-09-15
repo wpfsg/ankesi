@@ -9,10 +9,11 @@ import { fetchMarineForSpots } from './lib/marine'
 import { applyCommunity, scoreSpot } from './lib/scoring'
 import { fmtTime } from './lib/format'
 import { hasBackend } from './lib/supabase'
-import { displayNameOf, useSession } from './lib/useSession'
+import { useSession } from './lib/useSession'
 import { fetchApprovedPonds, fetchRecentReports, fetchSavedSpotIds, flagReport, setSaved } from './lib/db'
 import { MapView } from './components/MapView'
-import { SearchPill } from './components/SearchPill'
+import { Header } from './components/Header'
+import { Splash } from './components/Splash'
 import { TripPlanner } from './components/TripPlanner'
 import { SpotSheet, type SpotAction } from './components/SpotSheet'
 import { AccountSheet } from './components/AccountSheet'
@@ -23,6 +24,8 @@ import { PaidPondForm } from './components/PaidPondForm'
 
 const REFRESH_MS = 60 * 60 * 1000
 const TICK_MS = 5 * 60 * 1000
+/** The splash never blocks longer than this, even if tiles are slow. */
+const SPLASH_MAX_MS = 12_000
 
 type Modal = 'account' | 'catch' | 'report' | 'pond' | 'mycatches' | null
 
@@ -45,6 +48,15 @@ export default function App() {
   const [saved, setSavedIds] = useState<Set<string>>(new Set())
   const [modal, setModal] = useState<Modal>(null)
   const [flash, setFlash] = useState<string | null>(null)
+  const [mapReady, setMapReady] = useState(false)
+  const [splashTimedOut, setSplashTimedOut] = useState(false)
+
+  const showSplash = !splashTimedOut && !(mapReady && (weather !== null || error !== null))
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setSplashTimedOut(true), SPLASH_MAX_MS)
+    return () => window.clearTimeout(id)
+  }, [])
 
   const say = (msg: string) => {
     setFlash(msg)
@@ -170,23 +182,19 @@ export default function App() {
 
   return (
     <>
-      <MapView spots={spots} results={results} selectedId={selectedId} onSelect={setSelectedId} />
+      <MapView
+        spots={spots}
+        results={results}
+        selectedId={selectedId}
+        onSelect={setSelectedId}
+        onReady={() => setMapReady(true)}
+      />
+
+      <Header spots={spots} results={results} user={user} onSelect={setSelectedId} onAccount={() => setModal('account')} />
 
       <div className="top">
-        <SearchPill spots={spots} results={results} onSelect={setSelectedId} />
         <div className="top-row">
           <TripPlanner spots={spots} results={results} onSelect={setSelectedId} />
-          <button type="button" className="pill-button glass" onClick={() => setModal('account')} aria-label={t('account.open')}>
-            {user ? (
-              <span className="avatar">{(displayNameOf(user)[0] ?? '?').toUpperCase()}</span>
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                <circle cx="12" cy="8" r="4" />
-                <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
-              </svg>
-            )}
-            {user ? '' : t('account.signIn')}
-          </button>
         </div>
         {loading && !weather && <div className="toast glass">{t('status.loading')}</div>}
         {error && (
@@ -276,6 +284,8 @@ export default function App() {
           <PaidPondForm key="pond" userId={user.id} onClose={() => setModal(null)} onSubmitted={() => undefined} />
         )}
       </AnimatePresence>
+
+      <AnimatePresence>{showSplash && <Splash key="splash" stage={mapReady ? 'weather' : 'map'} />}</AnimatePresence>
     </>
   )
 }

@@ -7,6 +7,7 @@ const en: Translation = {
   },
   search: {
     placeholder: 'Lake, river, region…',
+    placeholderShort: 'Search…',
     noResults: 'Nothing found',
   },
   status: {
@@ -159,6 +160,15 @@ const en: Translation = {
     ka: 'ქა',
     en: 'EN',
   },
+  theme: {
+    light: 'Light theme',
+    dark: 'Dark theme',
+    toggle: 'Switch theme',
+  },
+  loader: {
+    map: 'Loading the map',
+    weather: 'Loading the weather',
+  },
   common: {
     cancel: 'Cancel',
     error: 'Something went wrong. Try again.',
@@ -171,6 +181,7 @@ const en: Translation = {
     title: 'Account',
     signIn: 'Sign in',
     intro: 'Sign in to log catches, send reports, and save spots.',
+    signUpNote: 'No separate sign-up. Your first sign-in creates the account.',
     email: 'Email',
     sendLink: 'Send link',
     linkSent: 'Check your email. A sign-in link is on its way.',

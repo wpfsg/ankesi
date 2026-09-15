@@ -26,6 +26,7 @@ page.on('response', (r) => {
   if (r.status() >= 400) problems.push(`http ${r.status()}: ${r.url()}`)
 })
 
+const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 async function shot(name) {
   await page.screenshot({ path: join(out, `${name}.png`) })
   console.log('shot', name)
@@ -34,26 +35,20 @@ async function shot(name) {
 async function layoutFacts() {
   return page.evaluate(() => {
     const canvas = document.querySelector('.maplibregl-canvas')
-    const gl = document.createElement('canvas').getContext('webgl2') || document.createElement('canvas').getContext('webgl')
-    const marker = document.querySelector('.marker')
-    const pill = document.querySelector('.pill')
-    const top = document.querySelector('.top')
+    const header = document.querySelector('.header')
+    const row = document.querySelector('.header-row')
     const bubbles = [...document.querySelectorAll('.bubble')]
-    const visible = bubbles.filter((b) => {
-      const r = b.getBoundingClientRect()
-      return r.width > 0 && r.right > 0 && r.left < innerWidth && r.bottom > 0 && r.top < innerHeight
-    })
+    const attrib = document.querySelector('.maplibregl-ctrl-attrib a')
     return {
       viewport: [innerWidth, innerHeight],
-      webgl: !!gl,
-      canvas: canvas ? [canvas.width, canvas.height, canvas.clientWidth, canvas.clientHeight] : null,
-      markerTransform: marker?.style.transform ?? null,
-      markerRect: marker ? [marker.getBoundingClientRect().left, marker.getBoundingClientRect().top] : null,
+      canvas: canvas ? [canvas.clientWidth, canvas.clientHeight] : null,
+      headerH: header?.offsetHeight,
+      headerVar: getComputedStyle(document.documentElement).getPropertyValue('--header-h').trim(),
+      rowOverflow: row ? row.scrollWidth > row.clientWidth : null,
       bubbles: bubbles.length,
-      bubblesVisible: visible.length,
-      pillRight: pill?.getBoundingClientRect().right,
-      topRight: top?.getBoundingClientRect().right,
       lang: document.documentElement.lang,
+      theme: document.documentElement.dataset.theme,
+      attribColor: attrib && getComputedStyle(attrib).color,
       title: document.title,
     }
   })
@@ -62,13 +57,32 @@ async function layoutFacts() {
 // --- phone, Georgian, light ---
 await page.setViewport({ width: 430, height: 900, deviceScaleFactor: 2, isMobile: true, hasTouch: true })
 await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }])
-await page.goto(`${base}/ka`, { waitUntil: 'networkidle2', timeout: 60000 })
+await page.goto(`${base}/ka`, { waitUntil: 'domcontentloaded', timeout: 60000 })
+
+// splash: capture frames of the animation, then confirm it goes away
+await page.waitForSelector('.splash', { timeout: 10000 })
+console.log('splash present at first paint: true')
+for (const [ms, name] of [[300, '00a-splash-unfold'], [900, '00b-splash-cast'], [500, '00c-splash-land'], [900, '00d-splash-bite']]) {
+  await wait(ms)
+  await shot(name)
+}
+await page.waitForFunction(() => !document.querySelector('.splash'), { timeout: 20000 })
+console.log('splash gone: true')
+
 await page.waitForSelector('.bubble[data-band]:not([data-band="none"])', { timeout: 30000 })
-await new Promise((r) => setTimeout(r, 4000))
+await wait(2500)
 console.log('facts/phone-ka', JSON.stringify(await layoutFacts()))
 await shot('01-phone-ka-map')
 
-// tap the highest-scoring spot bubble (not a cluster)
+// theme toggle
+await page.evaluate(() => document.querySelector('.icon-toggle').click())
+await wait(400)
+console.log('after theme toggle', JSON.stringify(await page.evaluate(() => ({ theme: document.documentElement.dataset.theme, bg: getComputedStyle(document.body).backgroundColor, saved: localStorage.getItem('ankesi.theme') }))))
+await shot('01b-phone-ka-dark')
+await page.evaluate(() => document.querySelector('.icon-toggle').click())
+await wait(400)
+
+// select the highest-scoring spot bubble (not a cluster); the sheet opens full
 const bestId = await page.evaluate(() => {
   const list = [...document.querySelectorAll('.bubble:not(.cluster)')].map((b) => ({ s: Number(b.textContent), b }))
   list.sort((a, b) => b.s - a.s)
@@ -76,64 +90,77 @@ const bestId = await page.evaluate(() => {
   return list[0].b.getAttribute('aria-label')
 })
 console.log('selected', bestId)
-await new Promise((r) => setTimeout(r, 1500))
-await shot('02-phone-ka-sheet-peek')
-
-// expand the sheet fully
-await page.evaluate(() => {
-  const h = document.querySelector('.sheet-handle')
-  h.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
-})
-await new Promise((r) => setTimeout(r, 1200))
-await shot('03-phone-ka-sheet-full')
-const sheetText = await page.evaluate(() => document.querySelector('.sheet-body')?.innerText.slice(0, 1600))
+await wait(1500)
+console.log('sheet', JSON.stringify(await page.evaluate(() => {
+  const s = document.querySelector('.sheet')
+  const r = s.getBoundingClientRect()
+  const h = document.querySelector('.header').getBoundingClientRect()
+  return { top: Math.round(r.top), headerBottom: Math.round(h.bottom), belowHeader: r.top >= h.bottom, scroll: document.querySelector('.sheet-body').dataset.scroll }
+})))
+await shot('02-phone-ka-sheet-full')
+const sheetText = await page.evaluate(() => document.querySelector('.sheet-body')?.innerText.slice(0, 700))
 console.log('--- sheet text ---\n' + sheetText + '\n---')
 
 // actions row → without a backend the account modal must explain that
 await page.evaluate(() => document.querySelector('.actions .btn').click())
-await new Promise((r) => setTimeout(r, 600))
+await wait(600)
 console.log('modal text', JSON.stringify(await page.evaluate(() => document.querySelector('.modal')?.innerText.slice(0, 160))))
-await shot('03b-phone-ka-modal-nobackend')
 await page.evaluate(() => document.querySelector('.modal .iconbtn').click())
-await new Promise((r) => setTimeout(r, 900)) // exit animation
+await wait(900)
 console.log('modal closed', await page.evaluate(() => !document.querySelector('.modal')))
-console.log('account pill', JSON.stringify(await page.evaluate(() => [...document.querySelectorAll('.top-row .pill-button')].map((b) => b.innerText.trim()))))
+
+// header account button opens the account modal too
+await page.evaluate(() => document.querySelector('.account-btn').click())
+await wait(600)
+console.log('account modal open', await page.evaluate(() => !!document.querySelector('.modal')))
+await page.evaluate(() => document.querySelector('.modal .iconbtn').click())
+await wait(900)
 
 // switch to English
 await page.evaluate(() => {
   const btn = [...document.querySelectorAll('.langchip button')].find((b) => b.textContent.trim() === 'EN')
   btn.click()
 })
-await new Promise((r) => setTimeout(r, 800))
+await wait(800)
 console.log('lang after toggle', await page.evaluate(() => document.documentElement.lang + ' ' + location.pathname))
-await shot('04-phone-en-sheet-full')
+await shot('03-phone-en-sheet-full')
 
-// close sheet, open trip planner
+// search from the header
 await page.evaluate(() => document.querySelector('.sheet .iconbtn').click())
-await new Promise((r) => setTimeout(r, 800))
+await wait(800)
+await page.type('.search input', 'lisi')
+await wait(400)
+console.log('search results', JSON.stringify(await page.evaluate(() => [...document.querySelectorAll('.header-results .result-name')].map((n) => n.firstChild.textContent.trim()))))
+await shot('04-phone-en-search')
+await page.evaluate(() => document.querySelector('.header-results .result').click())
+await wait(1200)
+
+// trip planner
+await page.evaluate(() => document.querySelector('.sheet .iconbtn').click())
+await wait(800)
 await page.evaluate(() => document.querySelector('.pill-button').click())
-await new Promise((r) => setTimeout(r, 800))
+await wait(800)
 await shot('05-phone-en-trip')
-const tripText = await page.evaluate(() => document.querySelector('.panel-list')?.innerText.slice(0, 500))
-console.log('--- trip ---\n' + tripText + '\n---')
 
 // --- desktop, English, dark ---
 await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 })
 await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }])
+await page.evaluate(() => localStorage.removeItem('ankesi.theme'))
 await page.goto(`${base}/en`, { waitUntil: 'networkidle2', timeout: 60000 })
+await page.waitForFunction(() => !document.querySelector('.splash'), { timeout: 20000 })
 await page.waitForSelector('.bubble[data-band]:not([data-band="none"])', { timeout: 30000 })
-await new Promise((r) => setTimeout(r, 4000))
+await wait(3000)
 console.log('facts/desktop-en-dark', JSON.stringify(await layoutFacts()))
 await page.evaluate(() => {
   const list = [...document.querySelectorAll('.bubble:not(.cluster)')].map((b) => ({ s: Number(b.textContent), b }))
   list.sort((a, b) => b.s - a.s)
   list[0].b.click()
 })
-await new Promise((r) => setTimeout(r, 2500))
+await wait(2500)
 await shot('06-desktop-en-dark')
-console.log('clusters', JSON.stringify(await page.evaluate(() => [...document.querySelectorAll('.bubble.cluster')].map((b) => b.textContent))))
 
 console.log('--- problems ---')
-for (const p of [...new Set(problems)]) console.log(p)
-if (problems.length === 0) console.log('none')
+const uniq = [...new Set(problems)].filter((p) => !p.includes('.pbf net::ERR_ABORTED'))
+for (const p of uniq) console.log(p)
+if (uniq.length === 0) console.log('none')
 await browser.close()

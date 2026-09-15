@@ -55,7 +55,7 @@ export function AccountSheet({ user, lang, savedSpots, onClose, onOpenCatches, o
     return (
       <ModalSheet title={t('account.signIn')} onClose={onClose}>
         <p className="muted" style={{ margin: 0 }}>
-          {t('account.intro')}
+          {t('account.intro')} {t('account.signUpNote')}
         </p>
         {sent ? (
           <div className="notice">{t('account.linkSent')}</div>

@@ -41,8 +41,11 @@ export function SpotSheet({ spot, result, reports, saved, manualPressure, onManu
   const { t, i18n } = useTranslation()
   const lang = i18n.language === 'en' ? 'en' : 'ka'
   const vh = useViewportHeight()
-  const snaps = useMemo(() => ({ peek: 210, half: Math.round(vh * 0.52), full: Math.round(vh * 0.92) }), [vh])
-  const [snap, setSnap] = useState<Snap>('peek')
+  const snaps = useMemo(() => {
+    const headerH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h'), 10) || 72
+    return { peek: 210, half: Math.round(vh * 0.52), full: vh - headerH - 8 }
+  }, [vh])
+  const [snap, setSnap] = useState<Snap>('full')
   const [flagged, setFlagged] = useState<Set<string>>(new Set())
   const y = useMotionValue(vh)
   const dragControls = useDragControls()
@@ -52,9 +55,10 @@ export function SpotSheet({ spot, result, reports, saved, manualPressure, onManu
     animate(y, vh - snaps[s], SPRING)
   }
 
+  // Open fully on selection; drag or double-tap the handle to collapse.
   useEffect(() => {
-    setSnap('peek')
-    animate(y, vh - snaps.peek, SPRING)
+    setSnap('full')
+    animate(y, vh - snaps.full, SPRING)
   }, [spot.id, snaps, vh, y])
 
   const onDragEnd = (_: unknown, info: PanInfo) => {
