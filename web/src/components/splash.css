@@ -44,21 +44,21 @@
 
 /* ---------- water ---------- */
 
-.water-top {
+.cast .water-top {
   stop-color: color-mix(in srgb, var(--accent) 30%, transparent);
 }
-.water-bottom {
+.cast .water-bottom {
   stop-color: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
-.wave {
+.cast .wave {
   will-change: transform;
 }
-.wave-back {
+.cast .wave-back {
   fill: var(--water-1);
   animation: wave-slide 7s linear infinite;
 }
-.wave-front {
+.cast .wave-front {
   fill: var(--water-2);
   animation: wave-slide 4.6s linear infinite reverse;
 }
@@ -74,11 +74,11 @@
 
 /* ---------- shore + rod ---------- */
 
-.shore {
+.cast .shore {
   fill: var(--glass-line);
 }
 
-.rod {
+.cast .rod {
   transform-origin: 40px 150px;
   transform: rotate(35deg);
   will-change: transform;
@@ -86,33 +86,33 @@
   animation-delay: var(--unfold);
 }
 
-.handle {
+.cast .handle {
   stroke: var(--rod-2);
   stroke-width: 6;
   stroke-linecap: round;
 }
-.reel {
+.cast .reel {
   fill: var(--rod-2);
 }
 
-.seg line {
+.cast .seg line {
   stroke: var(--rod);
   stroke-linecap: round;
 }
-.seg1 line {
+.cast .seg1 line {
   stroke-width: 4.2;
 }
-.seg2 line {
+.cast .seg2 line {
   stroke-width: 3.2;
 }
-.seg3 line {
+.cast .seg3 line {
   stroke-width: 2.4;
 }
-.seg4 line {
+.cast .seg4 line {
   stroke-width: 1.7;
 }
 
-.guide {
+.cast .guide {
   fill: none;
   stroke: var(--accent);
   stroke-width: 1;
@@ -120,31 +120,31 @@
 }
 
 /* telescopic unfold: each segment slides out from the handle once */
-.seg2 {
+.cast .seg2 {
   transform: translate(0, -38px);
   animation: unfold2 0.4s var(--ease-spring) both;
   animation-delay: 0.15s;
 }
-.seg3 {
+.cast .seg3 {
   transform: translate(0, -66px);
   animation: unfold3 0.4s var(--ease-spring) both;
   animation-delay: 0.35s;
 }
-.seg4 {
+.cast .seg4 {
   transform: translate(0, -88px);
   animation: unfold4 0.4s var(--ease-spring) both;
   animation-delay: 0.55s;
 }
-.seg1 .guide {
+.cast .seg1 .guide {
   animation-delay: 0.1s;
 }
-.seg2 .guide {
+.cast .seg2 .guide {
   animation-delay: 0.45s;
 }
-.seg3 .guide {
+.cast .seg3 .guide {
   animation-delay: 0.65s;
 }
-.seg4 .guide {
+.cast .seg4 .guide {
   animation-delay: 0.85s;
 }
 
@@ -184,7 +184,7 @@
 }
 
 /* tip flex lags the cast */
-.tip {
+.cast .tip {
   transform-origin: 40px 110px;
   animation: flex var(--loop) ease-in-out infinite both;
   animation-delay: var(--unfold);
@@ -260,7 +260,7 @@
 
 /* ---------- line ---------- */
 
-.line {
+.cast .line {
   fill: none;
   stroke: var(--fg-2);
   stroke-width: 0.9;
@@ -272,10 +272,10 @@
   animation-fill-mode: both;
   animation-delay: var(--unfold);
 }
-.line-arc {
+.cast .line-arc {
   animation-name: line-arc;
 }
-.line-taut {
+.cast .line-taut {
   animation-name: line-taut;
 }
 
@@ -319,23 +319,23 @@
 
 /* ---------- float ---------- */
 
-.float {
+.cast .float {
   transform: translate(240px, 138px);
   will-change: transform, opacity;
   animation: float-flight var(--loop) ease-in-out infinite both;
   animation-delay: var(--unfold);
 }
-.float-stem {
+.cast .float-stem {
   stroke: var(--fg);
   stroke-width: 1;
 }
-.float-body {
+.cast .float-body {
   fill: var(--band-slow);
 }
-.float-belly {
+.cast .float-belly {
   fill: #fff;
 }
-.float-tip {
+.cast .float-tip {
   fill: var(--band-dead);
 }
 
@@ -398,7 +398,7 @@
 
 /* ---------- splash effects ---------- */
 
-.ripple {
+.cast .ripple {
   fill: none;
   stroke: var(--accent);
   stroke-width: 1;
@@ -410,13 +410,13 @@
   animation-fill-mode: both;
   animation-delay: var(--unfold);
 }
-.r1 {
+.cast .r1 {
   animation-name: ripple1;
 }
-.r2 {
+.cast .r2 {
   animation-name: ripple2;
 }
-.r3 {
+.cast .r3 {
   animation-name: ripple3;
 }
 
@@ -477,7 +477,7 @@
   }
 }
 
-.drop {
+.cast .drop {
   fill: var(--accent);
   animation-duration: var(--loop);
   animation-timing-function: ease-out;
@@ -485,13 +485,13 @@
   animation-fill-mode: both;
   animation-delay: var(--unfold);
 }
-.d1 {
+.cast .d1 {
   animation-name: drop1;
 }
-.d2 {
+.cast .d2 {
   animation-name: drop2;
 }
-.d3 {
+.cast .d3 {
   animation-name: drop3;
 }
 
@@ -555,7 +555,7 @@
 
 /* ---------- fish + bubbles ---------- */
 
-.fish {
+.cast .fish {
   fill: var(--accent);
   opacity: 0;
   transform: translate(200px, 200px);
@@ -563,7 +563,7 @@
   animation: fish-bite var(--loop) ease-in-out infinite both;
   animation-delay: var(--unfold);
 }
-.fish-eye {
+.cast .fish-eye {
   fill: var(--bg);
 }
 
@@ -600,7 +600,7 @@
   }
 }
 
-.bubble {
+.cast .air {
   fill: var(--accent);
   opacity: 0;
   animation-duration: var(--loop);
@@ -609,13 +609,13 @@
   animation-fill-mode: both;
   animation-delay: var(--unfold);
 }
-.b1 {
+.cast .b1 {
   animation-name: bubble1;
 }
-.b2 {
+.cast .b2 {
   animation-name: bubble2;
 }
-.b3 {
+.cast .b3 {
   animation-name: bubble3;
 }
 
@@ -741,21 +741,21 @@
   .splash * {
     animation: none !important;
   }
-  .rod {
+  .cast .rod {
     transform: rotate(50deg);
   }
-  .line-arc {
+  .cast .line-arc {
     opacity: 1;
     stroke-dashoffset: 0;
   }
-  .line-taut,
-  .fish,
-  .bubble,
-  .drop,
-  .ripple {
+  .cast .line-taut,
+  .cast .fish,
+  .cast .air,
+  .cast .drop,
+  .cast .ripple {
     opacity: 0;
   }
-  .float {
+  .cast .float {
     opacity: 1;
     animation: bob 3s ease-in-out infinite !important;
   }

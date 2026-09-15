@@ -51,9 +51,9 @@ export function Splash({ stage }: Props) {
               <path d="M9 0l10-8v16z" />
               <circle cx="-9" cy="-1.5" r="1.4" className="fish-eye" />
             </g>
-            <circle className="bubble b1" cx="236" cy="152" r="1.4" />
-            <circle className="bubble b2" cx="244" cy="156" r="1" />
-            <circle className="bubble b3" cx="240" cy="160" r="1.2" />
+            <circle className="air b1" cx="236" cy="152" r="1.4" />
+            <circle className="air b2" cx="244" cy="156" r="1" />
+            <circle className="air b3" cx="240" cy="160" r="1.2" />
           </g>
 
           {/* ripples and droplets at the landing point */}

@@ -38,8 +38,15 @@ async function layoutFacts() {
     const header = document.querySelector('.header')
     const row = document.querySelector('.header-row')
     const bubbles = [...document.querySelectorAll('.bubble')]
+    const visibleBubbles = bubbles.filter((b) => {
+      if (b.closest('.marker')?.style.display === 'none') return false
+      const r = b.getBoundingClientRect()
+      const s = getComputedStyle(b)
+      return r.width > 0 && parseFloat(s.opacity) > 0.5 && s.visibility !== 'hidden' && r.left > -50 && r.left < innerWidth + 50 && r.top > -50 && r.top < innerHeight + 50
+    })
     const attrib = document.querySelector('.maplibregl-ctrl-attrib a')
     return {
+      visibleBubbles: visibleBubbles.length,
       viewport: [innerWidth, innerHeight],
       canvas: canvas ? [canvas.clientWidth, canvas.clientHeight] : null,
       headerH: header?.offsetHeight,
