@@ -184,6 +184,16 @@ const ka = {
     toggle: "თემის შეცვლა",
   },
 
+  layers: {
+    title: "რუკის სტილი",
+    positron: "მინიმალური",
+    bright: "ნათელი",
+    liberty: "დეტალური",
+    dark: "მუქი",
+    fiord: "ფიორდი",
+    satellite: "სატელიტი",
+  },
+
   loader: {
     map: "რუკა იტვირთება",
     weather: "ამინდის მონაცემები იტვირთება",

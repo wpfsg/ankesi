@@ -1,5 +1,13 @@
 import { useEffect, useRef } from 'react'
-import { LngLatBounds, Map as MapLibreMap, Marker, setWorkerUrl } from 'maplibre-gl'
+import {
+  LngLatBounds,
+  Map as MapLibreMap,
+  Marker,
+  setWorkerUrl,
+  type LayerSpecification,
+  type SourceSpecification,
+  type StyleSpecification,
+} from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 // MapLibre resolves its worker as `new URL(<dynamic name>, import.meta.url)`,
 // which Vite cannot trace, so production builds never emit the file and the
@@ -9,16 +17,59 @@ import mapWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import type { Spot, SpotResult } from '../types'
 import { GEORGIA_BOUNDS } from '../data/spots'
 import { bandOf } from '../lib/scoring'
+import type { MapLayer } from '../lib/mapLayer'
 
 setWorkerUrl(mapWorkerUrl)
 
-const STYLE_URL = 'https://tiles.openfreemap.org/styles/positron'
+const STYLE_BASE = 'https://tiles.openfreemap.org/styles/'
+type VectorLayer = Exclude<MapLayer, 'satellite'>
+const LABEL_STYLE: VectorLayer = 'positron'
+const SATELLITE_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+const SATELLITE_ATTRIBUTION = 'Imagery © Esri, Maxar, Earthstar Geographics, and the GIS User Community'
+
+function styleUrl(layer: VectorLayer): string {
+  return STYLE_BASE + layer
+}
+
+let satelliteStyle: Promise<StyleSpecification> | null = null
+
+/** Esri imagery underneath the label layers of a vector style, so place and
+ *  water names stay readable. Built once, then reused. */
+function loadSatelliteStyle(): Promise<StyleSpecification> {
+  satelliteStyle ??= fetch(styleUrl(LABEL_STYLE))
+    .then((r) => {
+      if (!r.ok) throw new Error(`style ${r.status}`)
+      return r.json() as Promise<StyleSpecification>
+    })
+    .then((base): StyleSpecification => {
+      const imagery: SourceSpecification = {
+        type: 'raster',
+        tiles: [SATELLITE_TILES],
+        tileSize: 256,
+        maxzoom: 19,
+        attribution: SATELLITE_ATTRIBUTION,
+      }
+      const raster: LayerSpecification = { id: 'satellite', type: 'raster', source: 'satellite' }
+      return {
+        ...base,
+        sources: { ...base.sources, satellite: imagery },
+        layers: [raster, ...base.layers.filter((l) => l.type === 'symbol')],
+      }
+    })
+    .catch((e) => {
+      satelliteStyle = null
+      throw e
+    })
+  return satelliteStyle
+}
 /** Bubbles closer than this many screen pixels collapse into one cluster. */
 const CLUSTER_PX = 46
 
 interface Props {
   spots: Spot[]
   results: Record<string, SpotResult>
+  /** Base map to show; changing it swaps the style, markers stay put. */
+  layer: MapLayer
   selectedId: string | null
   onSelect: (id: string | null) => void
   /** Fires once the style has loaded and the first frame rendered. */
@@ -45,9 +96,10 @@ function makeBubble(type: string, label: string): { wrap: HTMLDivElement; bubble
   return { wrap, bubble }
 }
 
-export function MapView({ spots, results, selectedId, onSelect, onReady }: Props) {
+export function MapView({ spots, results, layer, selectedId, onSelect, onReady }: Props) {
   const container = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
+  const appliedLayer = useRef<MapLayer | null>(null)
   const entries = useRef<Map<string, Entry>>(new Map())
   const clusterMarkers = useRef<Marker[]>([])
   const resultsRef = useRef(results)
@@ -120,9 +172,13 @@ export function MapView({ spots, results, selectedId, onSelect, onReady }: Props
   // Create the map once.
   useEffect(() => {
     if (!container.current || mapRef.current) return
+    // Satellite needs an async style; start from its label style and let the
+    // layer effect swap the imagery in once it resolves.
+    const initial: MapLayer = layer === 'satellite' ? LABEL_STYLE : layer
+    appliedLayer.current = initial
     const map = new MapLibreMap({
       container: container.current,
-      style: STYLE_URL,
+      style: styleUrl(initial),
       bounds: GEORGIA_BOUNDS,
       fitBoundsOptions: { padding: { top: 120, bottom: 60, left: 30, right: 30 } },
       attributionControl: { compact: true },
@@ -140,11 +196,32 @@ export function MapView({ spots, results, selectedId, onSelect, onReady }: Props
     return () => {
       map.remove()
       mapRef.current = null
+      appliedLayer.current = null
       entries.current.clear()
       clusterMarkers.current = []
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Swap the base style when the layer changes. Markers are DOM elements
+  // owned by MapLibre, so they survive setStyle.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || appliedLayer.current === layer) return
+    appliedLayer.current = layer
+    if (container.current) container.current.dataset.layer = layer
+    if (layer === 'satellite') {
+      loadSatelliteStyle()
+        .then((style) => {
+          if (mapRef.current === map && appliedLayer.current === 'satellite') map.setStyle(style)
+        })
+        .catch(() => {
+          // imagery style unavailable; keep whatever is showing
+        })
+    } else {
+      map.setStyle(styleUrl(layer))
+    }
+  }, [layer])
 
   // Sync markers with the spot list (seed spots plus approved paid ponds).
   useEffect(() => {
@@ -201,5 +278,5 @@ export function MapView({ spots, results, selectedId, onSelect, onReady }: Props
     })
   }, [selectedId])
 
-  return <div ref={container} className="map" />
+  return <div ref={container} className="map" data-layer={layer} />
 }

@@ -138,7 +138,9 @@ button {
   outline: none;
 }
 
-:root[data-theme='dark'] .map .maplibregl-canvas {
+/* Dark theme inverts the light vector styles. Styles that are already dark,
+   and satellite imagery, are left alone. */
+:root[data-theme='dark'] .map:not([data-layer='dark']):not([data-layer='fiord']):not([data-layer='satellite']) .maplibregl-canvas {
   filter: invert(1) hue-rotate(180deg) brightness(0.85) saturate(0.7);
 }
 
@@ -408,6 +410,99 @@ html.searching .top {
     right: auto;
     width: 460px;
     left: max(12px, calc((100% - 1200px) / 2 + 12px));
+  }
+}
+
+/* ---------- base map switcher (top right, below the header) ---------- */
+
+.layers {
+  position: fixed;
+  top: calc(var(--header-h, 72px) + 8px);
+  right: 12px;
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+html.searching .layers {
+  visibility: hidden;
+}
+
+.layers-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--fg-2);
+}
+
+.layers-btn:hover,
+.layers-btn[aria-expanded='true'] {
+  color: var(--fg);
+}
+
+.layers-menu {
+  min-width: 180px;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.layers-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--fg-2);
+  text-align: left;
+}
+
+.layers-option:hover {
+  background: var(--glass-line);
+  color: var(--fg);
+}
+
+.layers-option[aria-checked='true'] {
+  color: var(--fg);
+  font-weight: 600;
+  background: var(--glass-line);
+}
+
+.layers-swatch {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border-radius: 5px;
+  border: 1px solid var(--glass-border);
+  background: #f4f2ee;
+}
+
+.layers-option[data-layer='bright'] .layers-swatch {
+  background: linear-gradient(135deg, #f8f4e9 50%, #a8d8ff 50%);
+}
+.layers-option[data-layer='liberty'] .layers-swatch {
+  background: linear-gradient(135deg, #e9efd8 50%, #9ecbf0 50%);
+}
+.layers-option[data-layer='dark'] .layers-swatch {
+  background: #1d1f24;
+}
+.layers-option[data-layer='fiord'] .layers-swatch {
+  background: #2b3a4d;
+}
+.layers-option[data-layer='satellite'] .layers-swatch {
+  background: linear-gradient(135deg, #3d5a2e 50%, #2a4d6e 50%);
+}
+
+@media (min-width: 720px) {
+  .layers {
+    right: 16px;
   }
 }
 

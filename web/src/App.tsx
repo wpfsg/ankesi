@@ -12,6 +12,8 @@ import { hasBackend } from './lib/supabase'
 import { useSession } from './lib/useSession'
 import { fetchApprovedPonds, fetchRecentReports, fetchSavedSpotIds, flagReport, setSaved } from './lib/db'
 import { MapView } from './components/MapView'
+import { LayerSwitcher } from './components/LayerSwitcher'
+import { useMapLayer } from './lib/mapLayer'
 import { Header } from './components/Header'
 import { Splash } from './components/Splash'
 import { TripPlanner } from './components/TripPlanner'
@@ -33,6 +35,7 @@ export default function App() {
   const { t, i18n } = useTranslation()
   const lang: Lang = i18n.language === 'en' ? 'en' : 'ka'
   const { user } = useSession()
+  const mapLayer = useMapLayer()
 
   const [ponds, setPonds] = useState<Spot[]>([])
   const spots = useMemo(() => [...SPOTS, ...ponds], [ponds])
@@ -185,12 +188,15 @@ export default function App() {
       <MapView
         spots={spots}
         results={results}
+        layer={mapLayer}
         selectedId={selectedId}
         onSelect={setSelectedId}
         onReady={() => setMapReady(true)}
       />
 
       <Header spots={spots} results={results} user={user} onSelect={setSelectedId} onAccount={() => setModal('account')} />
+
+      <LayerSwitcher />
 
       <div className="top">
         <div className="top-row">

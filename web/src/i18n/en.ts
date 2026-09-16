@@ -165,6 +165,15 @@ const en: Translation = {
     dark: 'Dark theme',
     toggle: 'Switch theme',
   },
+  layers: {
+    title: 'Map style',
+    positron: 'Minimal',
+    bright: 'Bright',
+    liberty: 'Detailed',
+    dark: 'Dark',
+    fiord: 'Fiord',
+    satellite: 'Satellite',
+  },
   loader: {
     map: 'Loading the map',
     weather: 'Loading the weather',
