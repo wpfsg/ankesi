@@ -4,8 +4,28 @@ import type { User } from '@supabase/supabase-js'
 import type { Spot, SpotResult } from '../types'
 import { LANGS, setLang, type Lang } from '../i18n'
 import { bandOf } from '../lib/scoring'
+import { fmtTime } from '../lib/format'
 import { displayNameOf } from '../lib/useSession'
 import { toggleTheme, useTheme } from '../lib/theme'
+import { MiniBubble } from '../styles/shared'
+import {
+  AccountBtn,
+  AccountLabel,
+  Avatar,
+  Brand,
+  BrandName,
+  HeaderActions,
+  HeaderResults,
+  HeaderRoot,
+  HeaderRow,
+  IconToggle,
+  Updated,
+  LangChip,
+  PillIcon,
+  Result,
+  ResultName,
+  Search,
+} from './Header.styles'
 
 interface Props {
   spots: Spot[]
@@ -13,11 +33,13 @@ interface Props {
   user: User | null
   onSelect: (id: string) => void
   onAccount: () => void
+  /** When the weather was last fetched; shown next to the controls. */
+  updatedAt?: Date
 }
 
 /** Fixed glass header: brand, search, theme, language, account. Publishes
  *  its height as --header-h so the bottom sheet and pills sit below it. */
-export function Header({ spots, results, user, onSelect, onAccount }: Props) {
+export function Header({ spots, results, user, onSelect, onAccount, updatedAt }: Props) {
   const { t, i18n } = useTranslation()
   const lang = (i18n.language === 'en' ? 'en' : 'ka') as Lang
   const theme = useTheme()
@@ -65,8 +87,11 @@ export function Header({ spots, results, user, onSelect, onAccount }: Props) {
   // Hide the floating pills while results are open so they don't show
   // through the glass.
   useEffect(() => {
-    document.documentElement.classList.toggle('searching', showResults)
-    return () => document.documentElement.classList.remove('searching')
+    if (showResults) document.documentElement.dataset.searching = 'true'
+    else delete document.documentElement.dataset.searching
+    return () => {
+      delete document.documentElement.dataset.searching
+    }
   }, [showResults])
 
   const [narrow, setNarrow] = useState(() => window.matchMedia('(max-width: 480px)').matches)
@@ -79,22 +104,22 @@ export function Header({ spots, results, user, onSelect, onAccount }: Props) {
   const placeholder = narrow ? t('search.placeholderShort') : t('search.placeholder')
 
   return (
-    <header ref={ref} className="header glass">
-      <div className="header-row">
-        <div className="brand" aria-label={t('app.title')}>
+    <HeaderRoot ref={ref}>
+      <HeaderRow>
+        <Brand aria-label={t('app.title')}>
           <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true">
             <circle cx="32" cy="32" r="30" fill="var(--accent)" />
             <path d="M17 34c7-11 22-11 29 0-7 11-22 11-29 0z" fill="var(--accent-fg)" />
             <circle cx="39" cy="33" r="2.4" fill="var(--accent)" />
           </svg>
-          <span className="brand-name">{t('app.title')}</span>
-        </div>
+          <BrandName>{t('app.title')}</BrandName>
+        </Brand>
 
-        <div className="search">
-          <svg className="pill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+        <Search>
+          <PillIcon viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             <circle cx="11" cy="11" r="7" />
             <path d="m20 20-3.5-3.5" strokeLinecap="round" />
-          </svg>
+          </PillIcon>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -106,11 +131,12 @@ export function Header({ spots, results, user, onSelect, onAccount }: Props) {
             autoCorrect="off"
             spellCheck={false}
           />
-        </div>
+        </Search>
 
-        <button
+        <HeaderActions>
+        {updatedAt && <Updated>{t('status.updated', { time: fmtTime(updatedAt, lang) })}</Updated>}
+        <IconToggle
           type="button"
-          className="icon-toggle"
           onClick={() => toggleTheme()}
           aria-label={theme === 'dark' ? t('theme.light') : t('theme.dark')}
           title={t('theme.toggle')}
@@ -125,41 +151,41 @@ export function Header({ spots, results, user, onSelect, onAccount }: Props) {
               <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
             </svg>
           )}
-        </button>
+        </IconToggle>
 
-        <div className="langchip" role="group" aria-label="language">
+        <LangChip role="group" aria-label="language">
           {LANGS.map((l) => (
             <button key={l} type="button" aria-pressed={lang === l} onClick={() => setLang(l)}>
               {t(`lang.${l}`)}
             </button>
           ))}
-        </div>
+        </LangChip>
 
-        <button type="button" className="account-btn" onClick={onAccount} aria-label={t('account.open')}>
+        <AccountBtn type="button" onClick={onAccount} aria-label={t('account.open')}>
           {user ? (
-            <span className="avatar">{(displayNameOf(user)[0] ?? '?').toUpperCase()}</span>
+            <Avatar>{(displayNameOf(user)[0] ?? '?').toUpperCase()}</Avatar>
           ) : (
             <>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                 <circle cx="12" cy="8" r="4" />
                 <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
               </svg>
-              <span className="account-label">{t('account.signIn')}</span>
+              <AccountLabel>{t('account.signIn')}</AccountLabel>
             </>
           )}
-        </button>
-      </div>
+        </AccountBtn>
+        </HeaderActions>
+      </HeaderRow>
 
       {showResults && (
-        <div className="results glass header-results" role="listbox">
-          {matches.length === 0 && <div className="result muted">{t('search.noResults')}</div>}
+        <HeaderResults role="listbox">
+          {matches.length === 0 && <Result as="div" $muted>{t('search.noResults')}</Result>}
           {matches.map((s) => {
             const score = results[s.id]?.hours[0]?.score
             return (
-              <button
+              <Result
                 key={s.id}
                 type="button"
-                className="result"
                 role="option"
                 aria-selected={false}
                 onMouseDown={(e) => e.preventDefault()}
@@ -169,20 +195,20 @@ export function Header({ spots, results, user, onSelect, onAccount }: Props) {
                   setFocused(false)
                 }}
               >
-                <span className="minibubble" data-band={bandOf(score)}>
+                <MiniBubble data-band={bandOf(score)}>
                   {score ?? '·'}
-                </span>
-                <span className="result-name">
+                </MiniBubble>
+                <ResultName>
                   {lang === 'ka' ? s.nameKa : s.nameEn}
                   <small>
                     {t(`type.${s.type}`)} · {t(`region.${s.region}`)}
                   </small>
-                </span>
-              </button>
+                </ResultName>
+              </Result>
             )
           })}
-        </div>
+        </HeaderResults>
       )}
-    </header>
+    </HeaderRoot>
   )
 }

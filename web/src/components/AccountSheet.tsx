@@ -6,6 +6,8 @@ import type { Lang } from '../i18n'
 import { hasBackend } from '../lib/supabase'
 import { displayNameOf, signInWithEmail, signInWithGoogle, signOut } from '../lib/useSession'
 import { ModalSheet } from './ModalSheet'
+import { Badge, Btn, CatchBody, CatchItem, Input, Label, Muted, Notice, SectionHeading } from '../styles/shared'
+import { Divider } from './AccountSheet.styles'
 
 interface Props {
   user: User | null
@@ -46,7 +48,7 @@ export function AccountSheet({ user, lang, savedSpots, onClose, onOpenCatches, o
   if (!hasBackend) {
     return (
       <ModalSheet title={t('account.title')} onClose={onClose}>
-        <div className="notice">{t('account.noBackend')}</div>
+        <Notice>{t('account.noBackend')}</Notice>
       </ModalSheet>
     )
   }
@@ -54,20 +56,17 @@ export function AccountSheet({ user, lang, savedSpots, onClose, onOpenCatches, o
   if (!user) {
     return (
       <ModalSheet title={t('account.signIn')} onClose={onClose}>
-        <p className="muted" style={{ margin: 0 }}>
+        <Muted as="p" style={{ margin: 0 }}>
           {t('account.intro')} {t('account.signUpNote')}
-        </p>
+        </Muted>
         {sent ? (
-          <div className="notice">{t('account.linkSent')}</div>
+          <Notice>{t('account.linkSent')}</Notice>
         ) : (
           <>
             <div>
-              <label className="label" htmlFor="email">
-                {t('account.email')}
-              </label>
-              <input
+              <Label htmlFor="email">{t('account.email')}</Label>
+              <Input
                 id="email"
-                className="input"
                 type="email"
                 inputMode="email"
                 autoComplete="email"
@@ -76,53 +75,51 @@ export function AccountSheet({ user, lang, savedSpots, onClose, onOpenCatches, o
                 onKeyDown={(e) => e.key === 'Enter' && void sendLink()}
               />
             </div>
-            <button type="button" className="btn accent block" disabled={busy || !email.trim()} onClick={() => void sendLink()}>
+            <Btn type="button" $accent $block disabled={busy || !email.trim()} onClick={() => void sendLink()}>
               {t('account.sendLink')}
-            </button>
-            <div className="divider">{t('account.or')}</div>
-            <button type="button" className="btn block" disabled={busy} onClick={() => void google()}>
+            </Btn>
+            <Divider>{t('account.or')}</Divider>
+            <Btn type="button" $block disabled={busy} onClick={() => void google()}>
               {t('account.google')}
-            </button>
+            </Btn>
           </>
         )}
-        {error && <div className="notice warn">{error}</div>}
+        {error && <Notice $warn>{error}</Notice>}
       </ModalSheet>
     )
   }
 
   return (
     <ModalSheet title={t('account.title')} onClose={onClose}>
-      <p className="muted" style={{ margin: 0 }}>
+      <Muted as="p" style={{ margin: 0 }}>
         {t('account.signedInAs', { name: displayNameOf(user) })}
-      </p>
-      <button type="button" className="btn block" onClick={onOpenCatches}>
+      </Muted>
+      <Btn type="button" $block onClick={onOpenCatches}>
         {t('account.myCatches')}
-      </button>
-      <button type="button" className="btn block" onClick={onOpenPond}>
+      </Btn>
+      <Btn type="button" $block onClick={onOpenPond}>
         {t('account.submitPond')}
-      </button>
+      </Btn>
 
-      <div className="h" style={{ marginTop: 8 }}>
-        {t('account.savedSpots')}
-      </div>
-      {savedSpots.length === 0 && <div className="muted">{t('account.noSaved')}</div>}
+      <SectionHeading style={{ marginTop: 8 }}>{t('account.savedSpots')}</SectionHeading>
+      {savedSpots.length === 0 && <Muted>{t('account.noSaved')}</Muted>}
       {savedSpots.map((s) => (
-        <div key={s.id} className="catch-item">
-          <button type="button" className="catch-body" style={{ textAlign: 'left' }} onClick={() => onSelectSpot(s.id)}>
+        <CatchItem key={s.id}>
+          <CatchBody as="button" type="button" style={{ textAlign: 'left' }} onClick={() => onSelectSpot(s.id)}>
             {lang === 'ka' ? s.nameKa : s.nameEn}
             <small>
               {t(`type.${s.type}`)} · {t(`region.${s.region}`)}
             </small>
-          </button>
-          <button type="button" className="badge" onClick={() => onUnsave(s.id)}>
+          </CatchBody>
+          <Badge as="button" type="button" onClick={() => onUnsave(s.id)}>
             {t('common.delete')}
-          </button>
-        </div>
+          </Badge>
+        </CatchItem>
       ))}
 
-      <button type="button" className="btn block" style={{ marginTop: 8 }} onClick={() => void signOut().then(onClose)}>
+      <Btn type="button" $block style={{ marginTop: 8 }} onClick={() => void signOut().then(onClose)}>
         {t('account.signOut')}
-      </button>
+      </Btn>
     </ModalSheet>
   )
 }

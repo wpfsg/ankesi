@@ -5,6 +5,7 @@ import { SPOTS } from '../data/spots'
 import { haversineKm } from '../lib/format'
 import { submitPond } from '../lib/db'
 import { ModalSheet } from './ModalSheet'
+import { Btn, Grid2, Input, Label, Muted, Notice, Textarea } from '../styles/shared'
 
 interface Props {
   userId: string
@@ -94,81 +95,69 @@ export function PaidPondForm({ userId, onClose, onSubmitted }: Props) {
   return (
     <ModalSheet title={t('pond.title')} onClose={onClose}>
       {done ? (
-        <div className="notice">{t('pond.pending')}</div>
+        <Notice>{t('pond.pending')}</Notice>
       ) : (
         <>
-          <p className="muted" style={{ margin: 0 }}>
+          <Muted as="p" style={{ margin: 0 }}>
             {t('pond.intro')}
-          </p>
-          <div className="grid2">
+          </Muted>
+          <Grid2>
             <div>
-              <label className="label" htmlFor="pnka">
-                {t('pond.nameKa')}
-              </label>
-              <input id="pnka" className="input" maxLength={80} value={nameKa} onChange={(e) => setNameKa(e.target.value)} />
+              <Label htmlFor="pnka">{t('pond.nameKa')}</Label>
+              <Input id="pnka" maxLength={80} value={nameKa} onChange={(e) => setNameKa(e.target.value)} />
             </div>
             <div>
-              <label className="label" htmlFor="pnen">
-                {t('pond.nameEn')}
-              </label>
-              <input id="pnen" className="input" maxLength={80} value={nameEn} onChange={(e) => setNameEn(e.target.value)} />
+              <Label htmlFor="pnen">{t('pond.nameEn')}</Label>
+              <Input id="pnen" maxLength={80} value={nameEn} onChange={(e) => setNameEn(e.target.value)} />
             </div>
-          </div>
+          </Grid2>
 
           <div>
-            <span className="label">{t('pond.location')}</span>
-            <div className="grid2">
-              <input className="input" placeholder={t('pond.lat')} inputMode="decimal" value={lat} onChange={(e) => setLat(e.target.value)} />
-              <input className="input" placeholder={t('pond.lon')} inputMode="decimal" value={lon} onChange={(e) => setLon(e.target.value)} />
-            </div>
-            <button type="button" className="btn" style={{ marginTop: 8 }} onClick={locate}>
+            <Label as="span">{t('pond.location')}</Label>
+            <Grid2>
+              <Input placeholder={t('pond.lat')} inputMode="decimal" value={lat} onChange={(e) => setLat(e.target.value)} />
+              <Input placeholder={t('pond.lon')} inputMode="decimal" value={lon} onChange={(e) => setLon(e.target.value)} />
+            </Grid2>
+            <Btn type="button" style={{ marginTop: 8 }} onClick={locate}>
               {t('pond.useLocation')}
-            </button>
-            <div className="muted" style={{ marginTop: 6 }}>
-              {t('pond.locationHint')}
-            </div>
+            </Btn>
+            <Muted style={{ marginTop: 6 }}>{t('pond.locationHint')}</Muted>
           </div>
 
-          <div className="grid2">
+          <Grid2>
             <div>
-              <label className="label" htmlFor="pfee">
-                {t('pond.fee')}
-              </label>
-              <input id="pfee" className="input" type="number" inputMode="decimal" min="0" value={fee} onChange={(e) => setFee(e.target.value)} />
+              <Label htmlFor="pfee">{t('pond.fee')}</Label>
+              <Input id="pfee" type="number" inputMode="decimal" min="0" value={fee} onChange={(e) => setFee(e.target.value)} />
             </div>
             <div>
-              <label className="label" htmlFor="phours">
-                {t('pond.hours')}
-              </label>
-              <input id="phours" className="input" maxLength={80} value={hours} onChange={(e) => setHours(e.target.value)} />
+              <Label htmlFor="phours">{t('pond.hours')}</Label>
+              <Input id="phours" maxLength={80} value={hours} onChange={(e) => setHours(e.target.value)} />
             </div>
+          </Grid2>
+
+          <div>
+            <Label htmlFor="pcontact">{t('pond.contact')}</Label>
+            <Input id="pcontact" maxLength={120} value={contact} onChange={(e) => setContact(e.target.value)} />
           </div>
 
           <div>
-            <label className="label" htmlFor="pcontact">
-              {t('pond.contact')}
-            </label>
-            <input id="pcontact" className="input" maxLength={120} value={contact} onChange={(e) => setContact(e.target.value)} />
-          </div>
-
-          <div>
-            <label className="label" htmlFor="packa">
+            <Label htmlFor="packa">
               {t('pond.accessKa')} · {t('common.optional')}
-            </label>
-            <textarea id="packa" className="textarea" maxLength={500} value={accessKa} onChange={(e) => setAccessKa(e.target.value)} />
+            </Label>
+            <Textarea id="packa" maxLength={500} value={accessKa} onChange={(e) => setAccessKa(e.target.value)} />
           </div>
           <div>
-            <label className="label" htmlFor="pacen">
+            <Label htmlFor="pacen">
               {t('pond.accessEn')} · {t('common.optional')}
-            </label>
-            <textarea id="pacen" className="textarea" maxLength={500} value={accessEn} onChange={(e) => setAccessEn(e.target.value)} />
+            </Label>
+            <Textarea id="pacen" maxLength={500} value={accessEn} onChange={(e) => setAccessEn(e.target.value)} />
           </div>
 
-          {error && <div className="notice warn">{error}</div>}
+          {error && <Notice $warn>{error}</Notice>}
 
-          <button type="button" className="btn accent block" disabled={busy || !valid} onClick={() => void submit()}>
+          <Btn type="button" $accent $block disabled={busy || !valid} onClick={() => void submit()}>
             {busy ? t('pond.submitting') : t('pond.submit')}
-          </button>
+          </Btn>
         </>
       )}
     </ModalSheet>

@@ -5,6 +5,7 @@ import type { Report, Spot, SpotResult, SpotWeather } from './types'
 import type { Lang } from './i18n'
 import { SPOTS } from './data/spots'
 import { fetchWeatherForSpots } from './lib/weather'
+import { RateLimitError } from './lib/forecastCache'
 import { fetchMarineForSpots } from './lib/marine'
 import { applyCommunity, scoreSpot } from './lib/scoring'
 import { fmtTime } from './lib/format'
@@ -13,6 +14,7 @@ import { useSession } from './lib/useSession'
 import { fetchApprovedPonds, fetchRecentReports, fetchSavedSpotIds, flagReport, setSaved } from './lib/db'
 import { MapView } from './components/MapView'
 import { LayerSwitcher } from './components/LayerSwitcher'
+import { ScoreLegend } from './components/ScoreLegend'
 import { useMapLayer } from './lib/mapLayer'
 import { Header } from './components/Header'
 import { Splash } from './components/Splash'
@@ -23,6 +25,7 @@ import { CatchForm } from './components/CatchForm'
 import { ReportForm } from './components/ReportForm'
 import { MyCatches } from './components/MyCatches'
 import { PaidPondForm } from './components/PaidPondForm'
+import { Toast, TopLayer } from './App.styles'
 
 const REFRESH_MS = 60 * 60 * 1000
 const TICK_MS = 5 * 60 * 1000
@@ -42,7 +45,8 @@ export default function App() {
   const spotsById = useMemo(() => Object.fromEntries(spots.map((s) => [s.id, s])) as Record<string, Spot>, [spots])
 
   const [weather, setWeather] = useState<Record<string, SpotWeather> | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<'rate' | 'other' | null>(null)
+  const [staleFrom, setStaleFrom] = useState<Date | null>(null)
   const [loading, setLoading] = useState(false)
   const [now, setNow] = useState(() => new Date())
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -53,6 +57,7 @@ export default function App() {
   const [flash, setFlash] = useState<string | null>(null)
   const [mapReady, setMapReady] = useState(false)
   const [splashTimedOut, setSplashTimedOut] = useState(false)
+  const [plannerOpen, setPlannerOpen] = useState(false)
 
   const showSplash = !splashTimedOut && !(mapReady && (weather !== null || error !== null))
 
@@ -79,8 +84,10 @@ export default function App() {
       for (const w of rows) byId[w.spotId] = { ...w, marine: marine[w.spotId] }
       setWeather(byId)
       setNow(new Date())
+      const stale = rows.filter((r) => r.stale)
+      setStaleFrom(stale.length ? new Date(Math.min(...stale.map((r) => r.fetchedAt.getTime()))) : null)
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
+      setError(e instanceof RateLimitError ? 'rate' : 'other')
     } finally {
       setLoading(false)
     }
@@ -192,30 +199,44 @@ export default function App() {
         selectedId={selectedId}
         onSelect={setSelectedId}
         onReady={() => setMapReady(true)}
+        shiftControls={selected !== null}
       />
 
-      <Header spots={spots} results={results} user={user} onSelect={setSelectedId} onAccount={() => setModal('account')} />
+      <Header
+        spots={spots}
+        results={results}
+        user={user}
+        onSelect={setSelectedId}
+        onAccount={() => setModal('account')}
+        updatedAt={fetchedAt}
+      />
 
-      <LayerSwitcher />
+      <LayerSwitcher shift={selected !== null} />
+      <ScoreLegend shift={plannerOpen} hideOnPhone={selected !== null || plannerOpen} />
 
-      <div className="top">
-        <div className="top-row">
-          <TripPlanner spots={spots} results={results} onSelect={setSelectedId} />
-        </div>
-        {loading && !weather && <div className="toast glass">{t('status.loading')}</div>}
+      <TripPlanner
+        spots={spots}
+        results={results}
+        onSelect={setSelectedId}
+        open={plannerOpen}
+        onOpenChange={setPlannerOpen}
+        hideLauncher={selected !== null}
+        updatedAt={fetchedAt}
+      />
+
+      <TopLayer>
+        {loading && !weather && <Toast>{t('status.loading')}</Toast>}
+        {!error && staleFrom && <Toast>{t('status.stale', { time: fmtTime(staleFrom, lang) })}</Toast>}
         {error && (
-          <div className="toast glass">
-            {t('status.error')}
+          <Toast>
+            {t(error === 'rate' ? 'status.rateLimited' : 'status.error')}
             <button type="button" onClick={() => void load(spots)}>
               {t('status.retry')}
             </button>
-          </div>
+          </Toast>
         )}
-        {flash && <div className="toast glass">{flash}</div>}
-        {!error && !flash && fetchedAt && !selected && (
-          <div className="toast glass">{t('status.updated', { time: fmtTime(fetchedAt, lang) })}</div>
-        )}
-      </div>
+        {flash && <Toast>{flash}</Toast>}
+      </TopLayer>
 
       {selected && (
         <SpotSheet

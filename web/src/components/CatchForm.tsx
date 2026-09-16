@@ -5,6 +5,8 @@ import type { Lang } from '../i18n'
 import { SPECIES } from '../data/species'
 import { insertCatch, type SnapshotInput } from '../lib/db'
 import { ModalSheet } from './ModalSheet'
+import { Btn, FileBtn, Grid2, Input, Label, Muted, Notice, Select, Textarea } from '../styles/shared'
+import { Preview, Switch } from './CatchForm.styles'
 
 interface Props {
   spot: Spot
@@ -67,79 +69,69 @@ export function CatchForm({ spot, snap, userId, lang, onClose, onSaved }: Props)
 
   return (
     <ModalSheet title={t('catch.title')} onClose={onClose}>
-      <p className="muted" style={{ margin: 0 }}>
+      <Muted as="p" style={{ margin: 0 }}>
         {lang === 'ka' ? spot.nameKa : spot.nameEn} · {t('catch.conditionsAttached')}
-      </p>
+      </Muted>
 
       <div>
-        <label className="label" htmlFor="species">
-          {t('catch.species')}
-        </label>
-        <select id="species" className="select" value={speciesId} onChange={(e) => setSpeciesId(e.target.value as SpeciesId)}>
+        <Label htmlFor="species">{t('catch.species')}</Label>
+        <Select id="species" value={speciesId} onChange={(e) => setSpeciesId(e.target.value as SpeciesId)}>
           {speciesOrder.map((id) => (
             <option key={id} value={id}>
               {lang === 'ka' ? SPECIES[id].nameKa : SPECIES[id].nameEn}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
-      <div className="grid2">
+      <Grid2>
         <div>
-          <label className="label" htmlFor="weight">
-            {t('catch.weight')}
-          </label>
-          <input id="weight" className="input" type="number" inputMode="decimal" step="0.05" min="0" value={weight} onChange={(e) => setWeight(e.target.value)} />
+          <Label htmlFor="weight">{t('catch.weight')}</Label>
+          <Input id="weight" type="number" inputMode="decimal" step="0.05" min="0" value={weight} onChange={(e) => setWeight(e.target.value)} />
         </div>
         <div>
-          <label className="label" htmlFor="length">
-            {t('catch.length')}
-          </label>
-          <input id="length" className="input" type="number" inputMode="decimal" step="0.5" min="0" value={length} onChange={(e) => setLength(e.target.value)} />
+          <Label htmlFor="length">{t('catch.length')}</Label>
+          <Input id="length" type="number" inputMode="decimal" step="0.5" min="0" value={length} onChange={(e) => setLength(e.target.value)} />
         </div>
-      </div>
+      </Grid2>
 
-      <div className="grid2">
+      <Grid2>
         <div>
-          <label className="label" htmlFor="bait">
-            {t('catch.bait')}
-          </label>
-          <input id="bait" className="input" maxLength={80} value={bait} onChange={(e) => setBait(e.target.value)} />
+          <Label htmlFor="bait">{t('catch.bait')}</Label>
+          <Input id="bait" maxLength={80} value={bait} onChange={(e) => setBait(e.target.value)} />
         </div>
         <div>
-          <label className="label" htmlFor="method">
-            {t('catch.method')}
-          </label>
-          <input id="method" className="input" maxLength={80} value={method} onChange={(e) => setMethod(e.target.value)} />
+          <Label htmlFor="method">{t('catch.method')}</Label>
+          <Input id="method" maxLength={80} value={method} onChange={(e) => setMethod(e.target.value)} />
         </div>
-      </div>
+      </Grid2>
 
       <div>
-        <label className="label" htmlFor="note">
+        <Label htmlFor="note">
           {t('catch.note')} · {t('common.optional')}
-        </label>
-        <textarea id="note" className="textarea" maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} />
+        </Label>
+        <Textarea id="note" maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} />
       </div>
 
       <div>
-        <label className="filebtn">
+        <FileBtn>
           <input type="file" accept="image/*" capture="environment" onChange={(e) => pick(e.target.files?.[0])} />
           {t('catch.photo')} · {t('common.optional')}
-        </label>
-        {preview && <img className="preview" src={preview} alt="" style={{ marginTop: 8 }} />}
+        </FileBtn>
+        {preview && <Preview src={preview} alt="" style={{ marginTop: 8 }} />}
       </div>
 
-      <label className="switch">
+      <Switch>
         <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
         {t('catch.public')}
-      </label>
-      {photo && <div className="muted">{t('catch.photoPublicNote')}</div>}
+      </Switch>
+      {photo && <Muted>{t('catch.photoPublicNote')}</Muted>}
 
-      {error && <div className="notice warn">{error}</div>}
+      {error && <Notice $warn>{error}</Notice>}
 
-      <button type="button" className="btn accent block" disabled={busy} onClick={() => void save()}>
+      <Btn type="button" $accent $block disabled={busy} onClick={() => void save()}>
         {busy ? t('catch.saving') : t('catch.save')}
-      </button>
+      </Btn>
     </ModalSheet>
   )
 }

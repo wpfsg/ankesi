@@ -18,6 +18,9 @@ const ka = {
     error: "ამინდის სერვისი არ პასუხობს. სცადეთ მოგვიანებით.",
     updated: "განახლდა {{time}}",
     retry: "ხელახლა ცდა",
+    rateLimited:
+      "პროგნოზის სერვისმა საათობრივი ლიმიტი ამოწურა. სცადეთ ცოტა მოგვიანებით.",
+    stale: "განახლება ვერ მოხერხდა. ნაჩვენებია შენახული მონაცემები ({{time}}).",
   },
 
   type: {
@@ -156,6 +159,17 @@ const ka = {
     waterTempMeasured: "ზღვის ზედაპირის გაზომილი ტემპერატურა",
     fee: "საფასური: {{fee}} ₾ / დღე",
     close: "დახურვა",
+    whyScore: "რატომ {{score}}?",
+    showAllFactors: "ყველა {{count}} ფაქტორი და წონა",
+    hideFactors: "დეტალების დამალვა",
+    bestToday: "საუკეთესო დრო დღეს",
+    bestUpcoming: "საუკეთესო დრო მომდევნო 48 სთ-ში",
+    bestWindowNote: "ამ ფანჯარაში საშუალო {{avg}} — პერიოდის მაქსიმუმი",
+    share: "გაზიარება",
+    linkCopied: "ბმული დაკოპირდა",
+    advanced: "დამატებითი",
+    helps: "ხელს უწყობს",
+    hurts: "აფერხებს",
   },
 
   trip: {
@@ -164,13 +178,26 @@ const ka = {
     today: "დღეს",
     tomorrow: "ხვალ",
     dayAfter: "ზეგ",
-    driveTime: "~{{min}} წთ მანქანით",
-    driveTimeHours: "~{{h}} სთ {{min}} წთ მანქანით",
+    driveTime: "~{{min}} წთ გზა",
+    driveTimeHours: "~{{h}} სთ {{min}} წთ გზა",
     driveEstimate: "მგზავრობის დრო მიახლოებითია.",
     locationNeeded: "ჩართეთ მდებარეობა მგზავრობის დროის სანახავად.",
     useLocation: "ჩემი მდებარეობა",
     dayScore: "დღის საშუალო შეფასება",
     empty: "მონაცემები იტვირთება…",
+    subtitle: "{{count}} ადგილი რეიტინგით · განახლდა {{time}}",
+    within2h: "≤ 2 სთ გზა",
+    species: "სახეობა",
+    region: "რეგიონი",
+    allSpecies: "ყველა სახეობა",
+    allRegions: "ყველა რეგიონი",
+    sortScore: "შეფასებით",
+    sortDistance: "მანძილით",
+    fromTbilisi: "მანძილები თბილისიდან",
+    fromYou: "მანძილები თქვენი მდებარეობიდან",
+    bestAt: "საუკეთესო {{start}}–{{end}}",
+    noMatch: "ფილტრებს არაფერი შეესაბამება.",
+    clearFilters: "ფილტრების გასუფთავება",
   },
 
   lang: {
@@ -186,12 +213,26 @@ const ka = {
 
   layers: {
     title: "რუკის სტილი",
-    positron: "მინიმალური",
+    satellite: "სატელიტი",
+    positron: "მარტივი",
     bright: "ნათელი",
     liberty: "დეტალური",
-    dark: "მუქი",
-    fiord: "ფიორდი",
-    satellite: "სატელიტი",
+    osm: "სტანდარტი",
+  },
+
+  legend: {
+    title: "თევზის აქტიურობა (0–100)",
+    weak: "სუსტი",
+    fair: "საშუალო",
+    great: "მშვენიერი",
+  },
+
+  map: {
+    controls: "რუკის მართვა",
+    zoomIn: "მიახლოება",
+    zoomOut: "დაშორება",
+    locate: "ჩემი მდებარეობა",
+    fitAll: "მთელი საქართველო",
   },
 
   loader: {

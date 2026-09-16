@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next'
 import type { Spot } from '../types'
 import { insertReport, type SnapshotInput } from '../lib/db'
 import { ModalSheet } from './ModalSheet'
+import { Btn, FileBtn, Label, Notice, Textarea } from '../styles/shared'
+import { ActivitySeg } from './ReportForm.styles'
 
 interface Props {
   spot: Spot
@@ -48,7 +50,7 @@ export function ReportForm({ spot, snap, userId, onClose, onSent }: Props) {
 
   return (
     <ModalSheet title={t('report.title')} onClose={onClose}>
-      <div className="activity-seg" role="radiogroup" aria-label={t('report.title')}>
+      <ActivitySeg role="radiogroup" aria-label={t('report.title')}>
         {LEVELS.map((l) => (
           <button
             key={l.value}
@@ -62,26 +64,26 @@ export function ReportForm({ spot, snap, userId, onClose, onSent }: Props) {
             {t(`band.${l.band}`)}
           </button>
         ))}
-      </div>
+      </ActivitySeg>
 
       <div>
-        <label className="label" htmlFor="rnote">
+        <Label htmlFor="rnote">
           {t('report.note')} · {t('common.optional')}
-        </label>
-        <textarea id="rnote" className="textarea" maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
+        </Label>
+        <Textarea id="rnote" maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
       </div>
 
-      <label className="filebtn">
+      <FileBtn>
         <input type="file" accept="image/*" capture="environment" onChange={(e) => setPhoto(e.target.files?.[0])} />
         {t('catch.photo')} · {t('common.optional')}
         {photo ? ` · ${photo.name}` : ''}
-      </label>
+      </FileBtn>
 
-      {error && <div className="notice warn">{error}</div>}
+      {error && <Notice $warn>{error}</Notice>}
 
-      <button type="button" className="btn accent block" disabled={busy || activity === null} onClick={() => void send()}>
+      <Btn type="button" $accent $block disabled={busy || activity === null} onClick={() => void send()}>
         {busy ? t('report.sending') : t('report.send')}
-      </button>
+      </Btn>
     </ModalSheet>
   )
 }

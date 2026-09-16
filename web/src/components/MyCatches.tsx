@@ -7,6 +7,7 @@ import { deleteCatch, fetchMyCatches } from '../lib/db'
 import { photoUrl } from '../lib/supabase'
 import { fmtDate } from '../lib/format'
 import { ModalSheet } from './ModalSheet'
+import { Badge, CatchBody, CatchItem, Muted, Notice, Thumb } from '../styles/shared'
 
 interface Props {
   userId: string
@@ -33,18 +34,18 @@ export function MyCatches({ userId, spotsById, lang, onClose }: Props) {
 
   return (
     <ModalSheet title={t('catch.myTitle')} onClose={onClose}>
-      {error && <div className="notice warn">{error}</div>}
-      {items === null && !error && <div className="muted">{t('common.loading')}</div>}
-      {items && items.length === 0 && <div className="muted">{t('catch.empty')}</div>}
-      {items && items.length > 0 && <div className="muted">{t('catch.total', { count: items.length })}</div>}
+      {error && <Notice $warn>{error}</Notice>}
+      {items === null && !error && <Muted>{t('common.loading')}</Muted>}
+      {items && items.length === 0 && <Muted>{t('catch.empty')}</Muted>}
+      {items && items.length > 0 && <Muted>{t('catch.total', { count: items.length })}</Muted>}
       {items?.map((c) => {
         const sp = SPECIES[c.speciesId]
         const spot = spotsById[c.spotId]
         const url = photoUrl(c.photoPath)
         return (
-          <div key={c.id} className="catch-item">
-            {url ? <img className="thumb" src={url} alt="" loading="lazy" /> : <div className="thumb" />}
-            <div className="catch-body">
+          <CatchItem key={c.id}>
+            {url ? <Thumb src={url} alt="" loading="lazy" /> : <Thumb as="div" />}
+            <CatchBody>
               {sp ? (lang === 'ka' ? sp.nameKa : sp.nameEn) : c.speciesId}
               {c.weightKg !== null ? ` · ${c.weightKg} kg` : ''}
               {c.lengthCm !== null ? ` · ${c.lengthCm} cm` : ''}
@@ -52,11 +53,11 @@ export function MyCatches({ userId, spotsById, lang, onClose }: Props) {
                 {spot ? (lang === 'ka' ? spot.nameKa : spot.nameEn) : c.spotId} · {fmtDate(c.caughtAt, lang)}
                 {c.bait ? ` · ${c.bait}` : ''}
               </small>
-            </div>
-            <button type="button" className="badge" onClick={() => void remove(c.id)}>
+            </CatchBody>
+            <Badge as="button" type="button" onClick={() => void remove(c.id)}>
               {t('common.delete')}
-            </button>
-          </div>
+            </Badge>
+          </CatchItem>
         )
       })}
     </ModalSheet>

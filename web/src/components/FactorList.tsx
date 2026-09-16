@@ -1,32 +1,11 @@
 import { useTranslation } from 'react-i18next'
 import type { FactorResult } from '../types'
-import { fmtSigned } from '../lib/format'
+import { rawLabel } from '../lib/factorLabel'
+import { Badge, Tabular } from '../styles/shared'
+import { Factor, FactorTop, FactorName, FactorVal, FactorBar, FactorFoot } from './FactorList.styles'
 
 interface Props {
   factors: FactorResult[]
-}
-
-function rawLabel(f: FactorResult): string {
-  switch (f.key) {
-    case 'pressureTrend':
-      return `${fmtSigned(f.raw, 1)} ${f.unit}`
-    case 'pressureLevel':
-      return `${Math.round(f.raw)} ${f.unit}`
-    case 'waterTemp':
-      return `${f.raw.toFixed(1)} ${f.unit}`
-    case 'wind':
-      return `${Math.round(f.raw)} ${f.unit}`
-    case 'light':
-      return `${Math.round(f.raw)} ${f.unit}`
-    case 'water':
-      return `${f.raw.toFixed(1)} ${f.unit} / 48h`
-    case 'waves':
-      return f.estimated ? '—' : `${f.raw.toFixed(1)} ${f.unit}`
-    case 'moon':
-      return `${f.raw} ${f.unit}`
-    default:
-      return ''
-  }
 }
 
 export function FactorList({ factors }: Props) {
@@ -38,28 +17,28 @@ export function FactorList({ factors }: Props) {
         const state = f.state ? t(`state.${f.state}`) : ''
         const contribution = Math.round(f.weight * f.value)
         return (
-          <div className="factor" key={f.key}>
-            <div className="factor-top">
-              <span className="factor-name">
+          <Factor key={f.key}>
+            <FactorTop>
+              <FactorName>
                 {t(`factor.${f.key}`)}{' '}
-                {f.estimated && <span className="badge">{t('score.estimate')}</span>}
-              </span>
-              <span className="factor-val">
+                {f.estimated && <Badge>{t('score.estimate')}</Badge>}
+              </FactorName>
+              <FactorVal>
                 {raw}
                 {raw && state ? ' · ' : ''}
                 {state}
-              </span>
-            </div>
-            <div className="factor-bar">
+              </FactorVal>
+            </FactorTop>
+            <FactorBar>
               <span style={{ width: `${Math.round(f.value * 100)}%` }} />
-            </div>
-            <div className="factor-foot">
+            </FactorBar>
+            <FactorFoot>
               <span>{t('score.weight', { weight: f.weight })}</span>
-              <span className="tabular">
+              <Tabular>
                 +{contribution} / {f.weight}
-              </span>
-            </div>
-          </div>
+              </Tabular>
+            </FactorFoot>
+          </Factor>
         )
       })}
     </div>

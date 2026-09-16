@@ -17,51 +17,62 @@ import mapWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import type { Spot, SpotResult } from '../types'
 import { GEORGIA_BOUNDS } from '../data/spots'
 import { bandOf } from '../lib/scoring'
-import type { MapLayer } from '../lib/mapLayer'
+import { MapRoot, Controls, ZoomGroup } from './MapView.styles'
+import { CtlBtn } from '../styles/shared'
+import { useOrigin } from '../lib/origin'
+import { useTranslation } from 'react-i18next'
+import { LABEL_LAYER, layerDef, type LayerDef, type MapLayer, type RasterLayer } from '../lib/mapLayer'
 
 setWorkerUrl(mapWorkerUrl)
 
-const STYLE_BASE = 'https://tiles.openfreemap.org/styles/'
-type VectorLayer = Exclude<MapLayer, 'satellite'>
-const LABEL_STYLE: VectorLayer = 'positron'
-const SATELLITE_TILES = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-const SATELLITE_ATTRIBUTION = 'Imagery © Esri, Maxar, Earthstar Geographics, and the GIS User Community'
-
-function styleUrl(layer: VectorLayer): string {
-  return STYLE_BASE + layer
+function vectorStyleUrl(id: MapLayer): string {
+  const def = layerDef(id)
+  return def.kind === 'vector' ? def.style : vectorStyleUrl(LABEL_LAYER)
 }
 
-let satelliteStyle: Promise<StyleSpecification> | null = null
+function rasterSource(def: RasterLayer): SourceSpecification {
+  return {
+    type: 'raster',
+    tiles: def.tiles,
+    tileSize: def.tileSize ?? 256,
+    maxzoom: def.maxzoom,
+    attribution: def.attribution,
+  }
+}
 
-/** Esri imagery underneath the label layers of a vector style, so place and
- *  water names stay readable. Built once, then reused. */
-function loadSatelliteStyle(): Promise<StyleSpecification> {
-  satelliteStyle ??= fetch(styleUrl(LABEL_STYLE))
+let labelStyle: Promise<StyleSpecification> | null = null
+
+/** The vector style whose symbol layers get drawn over imagery. Fetched once. */
+function loadLabelStyle(): Promise<StyleSpecification> {
+  labelStyle ??= fetch(vectorStyleUrl(LABEL_LAYER))
     .then((r) => {
       if (!r.ok) throw new Error(`style ${r.status}`)
       return r.json() as Promise<StyleSpecification>
     })
-    .then((base): StyleSpecification => {
-      const imagery: SourceSpecification = {
-        type: 'raster',
-        tiles: [SATELLITE_TILES],
-        tileSize: 256,
-        maxzoom: 19,
-        attribution: SATELLITE_ATTRIBUTION,
-      }
-      const raster: LayerSpecification = { id: 'satellite', type: 'raster', source: 'satellite' }
-      return {
-        ...base,
-        sources: { ...base.sources, satellite: imagery },
-        layers: [raster, ...base.layers.filter((l) => l.type === 'symbol')],
-      }
-    })
     .catch((e) => {
-      satelliteStyle = null
+      labelStyle = null
       throw e
     })
-  return satelliteStyle
+  return labelStyle
 }
+
+/** Resolve a layer definition to something map.setStyle accepts. Raster maps
+ *  become a one-layer style; imagery with `labels` also gets the label
+ *  style's symbol layers on top so place and water names stay readable. */
+async function styleFor(def: LayerDef): Promise<string | StyleSpecification> {
+  if (def.kind === 'vector') return def.style
+  const raster: LayerSpecification = { id: 'base', type: 'raster', source: 'base' }
+  if (!def.labels) {
+    return { version: 8, sources: { base: rasterSource(def) }, layers: [raster] }
+  }
+  const base = await loadLabelStyle()
+  return {
+    ...base,
+    sources: { ...base.sources, base: rasterSource(def) },
+    layers: [raster, ...base.layers.filter((l) => l.type === 'symbol')],
+  }
+}
+
 /** Bubbles closer than this many screen pixels collapse into one cluster. */
 const CLUSTER_PX = 46
 
@@ -74,6 +85,8 @@ interface Props {
   onSelect: (id: string | null) => void
   /** Fires once the style has loaded and the first frame rendered. */
   onReady?: () => void
+  /** Desktop: slide the map controls left of the open detail panel. */
+  shiftControls?: boolean
 }
 
 interface Entry {
@@ -96,7 +109,10 @@ function makeBubble(type: string, label: string): { wrap: HTMLDivElement; bubble
   return { wrap, bubble }
 }
 
-export function MapView({ spots, results, layer, selectedId, onSelect, onReady }: Props) {
+export function MapView({ spots, results, layer, selectedId, onSelect, onReady, shiftControls }: Props) {
+  const { t } = useTranslation()
+  const { origin, locating, locate } = useOrigin()
+  const userMarker = useRef<Marker | null>(null)
   const container = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const appliedLayer = useRef<MapLayer | null>(null)
@@ -172,13 +188,13 @@ export function MapView({ spots, results, layer, selectedId, onSelect, onReady }
   // Create the map once.
   useEffect(() => {
     if (!container.current || mapRef.current) return
-    // Satellite needs an async style; start from its label style and let the
-    // layer effect swap the imagery in once it resolves.
-    const initial: MapLayer = layer === 'satellite' ? LABEL_STYLE : layer
+    // Raster layers need a built style object; start from a vector style and
+    // let the layer effect swap the real one in.
+    const initial: MapLayer = layerDef(layer).kind === 'vector' ? layer : LABEL_LAYER
     appliedLayer.current = initial
     const map = new MapLibreMap({
       container: container.current,
-      style: styleUrl(initial),
+      style: vectorStyleUrl(initial),
       bounds: GEORGIA_BOUNDS,
       fitBoundsOptions: { padding: { top: 120, bottom: 60, left: 30, right: 30 } },
       attributionControl: { compact: true },
@@ -210,17 +226,13 @@ export function MapView({ spots, results, layer, selectedId, onSelect, onReady }
     if (!map || appliedLayer.current === layer) return
     appliedLayer.current = layer
     if (container.current) container.current.dataset.layer = layer
-    if (layer === 'satellite') {
-      loadSatelliteStyle()
-        .then((style) => {
-          if (mapRef.current === map && appliedLayer.current === 'satellite') map.setStyle(style)
-        })
-        .catch(() => {
-          // imagery style unavailable; keep whatever is showing
-        })
-    } else {
-      map.setStyle(styleUrl(layer))
-    }
+    styleFor(layerDef(layer))
+      .then((style) => {
+        if (mapRef.current === map && appliedLayer.current === layer) map.setStyle(style)
+      })
+      .catch(() => {
+        // style unavailable; keep whatever is showing
+      })
   }, [layer])
 
   // Sync markers with the spot list (seed spots plus approved paid ponds).
@@ -278,5 +290,57 @@ export function MapView({ spots, results, layer, selectedId, onSelect, onReady }
     })
   }, [selectedId])
 
-  return <div ref={container} className="map" data-layer={layer} />
+  // Blue dot once the user has shared their position.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || origin.source !== 'user') return
+    if (!userMarker.current) {
+      const el = document.createElement('div')
+      el.setAttribute('data-user-dot', '')
+      // Position must be set before addTo, or MapLibre reads an undefined LngLat.
+      userMarker.current = new Marker({ element: el, anchor: 'center' }).setLngLat([origin.lon, origin.lat]).addTo(map)
+    } else {
+      userMarker.current.setLngLat([origin.lon, origin.lat])
+    }
+  }, [origin])
+
+  const fitGeorgia = () =>
+    mapRef.current?.fitBounds(GEORGIA_BOUNDS, { padding: { top: 120, bottom: 60, left: 30, right: 30 }, duration: 700 })
+
+  const flyToUser = async () => {
+    const o = origin.source === 'user' ? origin : await locate()
+    if (o) mapRef.current?.flyTo({ center: [o.lon, o.lat], zoom: Math.max(mapRef.current.getZoom(), 10), duration: 900 })
+  }
+
+  return (
+    <>
+      <MapRoot ref={container} data-layer={layer} data-keep-colors={layerDef(layer).keepColors || undefined} />
+      <Controls $shift={shiftControls} aria-label={t('map.controls')}>
+        <CtlBtn type="button" onClick={() => void flyToUser()} aria-label={t('map.locate')} title={t('map.locate')} aria-busy={locating}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <circle cx="12" cy="12" r="8" />
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+          </svg>
+        </CtlBtn>
+        <CtlBtn type="button" onClick={fitGeorgia} aria-label={t('map.fitAll')} title={t('map.fitAll')}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+          </svg>
+        </CtlBtn>
+        <ZoomGroup>
+          <button type="button" onClick={() => mapRef.current?.zoomIn()} aria-label={t('map.zoomIn')} title={t('map.zoomIn')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </button>
+          <button type="button" onClick={() => mapRef.current?.zoomOut()} aria-label={t('map.zoomOut')} title={t('map.zoomOut')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+              <path d="M5 12h14" />
+            </svg>
+          </button>
+        </ZoomGroup>
+      </Controls>
+    </>
+  )
 }
