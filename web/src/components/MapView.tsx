@@ -1,9 +1,16 @@
 import { useEffect, useRef } from 'react'
-import { LngLatBounds, Map as MapLibreMap, Marker } from 'maplibre-gl'
+import { LngLatBounds, Map as MapLibreMap, Marker, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+// MapLibre resolves its worker as `new URL(<dynamic name>, import.meta.url)`,
+// which Vite cannot trace, so production builds never emit the file and the
+// map silently renders nothing (dev works because node_modules is served
+// directly). Bundle the worker explicitly and point MapLibre at it.
+import mapWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import type { Spot, SpotResult } from '../types'
 import { GEORGIA_BOUNDS } from '../data/spots'
 import { bandOf } from '../lib/scoring'
+
+setWorkerUrl(mapWorkerUrl)
 
 const STYLE_URL = 'https://tiles.openfreemap.org/styles/positron'
 /** Bubbles closer than this many screen pixels collapse into one cluster. */
