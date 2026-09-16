@@ -24,14 +24,15 @@
   background: var(--bg);
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: 24px 16px;
 }
 
 .splash-card {
-  width: min(86vw, 440px);
+  width: min(92vw, 480px);
   border-radius: var(--radius-lg);
-  padding: 22px 22px 26px;
+  padding: 22px 32px 28px;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .cast {
@@ -669,11 +670,19 @@
 
 .splash-brand {
   margin-top: 6px;
+  padding: 0 8px; /* room for the clipped gradient so edge glyphs are not cut */
   font-size: 30px;
   font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.1;
-  background: linear-gradient(90deg, var(--fg) 0%, var(--accent) 40%, var(--fg) 60%, var(--fg) 100%);
+  overflow-wrap: anywhere;
+  background: linear-gradient(
+    90deg,
+    var(--fg) 0%,
+    var(--accent) 40%,
+    var(--fg) 60%,
+    var(--fg) 100%
+  );
   background-size: 250% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -692,20 +701,30 @@
 
 .splash-tagline {
   margin-top: 4px;
+  padding: 0 8px;
   color: var(--fg-2);
   font-size: 14px;
+  line-height: 1.35;
+  text-wrap: balance;
 }
 
 .splash-status {
   margin-top: 16px;
+  padding: 0 8px;
   font-size: 13px;
+  line-height: 1.4;
   color: var(--fg-3);
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
-  gap: 6px;
+  column-gap: 8px;
+  row-gap: 2px;
+  text-wrap: balance;
 }
 
 .dots {
+  flex: none;
   display: inline-flex;
   gap: 3px;
 }
