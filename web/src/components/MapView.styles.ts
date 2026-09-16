@@ -75,7 +75,8 @@ export const MapRoot = styled.div`
     background: var(--band);
     border: 2px solid rgba(255, 255, 255, 0.7);
     box-shadow: 0 2px 8px rgba(15, 23, 32, 0.3);
-    transition: transform 260ms var(--spring), opacity 200ms, box-shadow 200ms;
+    cursor: pointer;
+    transition: transform 260ms var(--spring), opacity 200ms, box-shadow 200ms, border-color 200ms;
     will-change: transform;
   }
 
@@ -89,6 +90,27 @@ export const MapRoot = styled.div`
 
   .bubble[data-band='none'] {
     color: rgba(255, 255, 255, 0.85);
+  }
+
+  /* Hover lifts the bubble; the wrapper gets the z-index because each
+     MapLibre marker is its own stacking context. Pointer-only so touch
+     devices don't get a stuck hover state after tapping. */
+  @media (hover: hover) {
+    .marker:hover {
+      z-index: 3;
+    }
+
+    .bubble:hover,
+    .bubble.dim:hover {
+      transform: scale(1.14);
+      opacity: 1;
+      border-color: #fff;
+      box-shadow: 0 6px 18px rgba(15, 23, 32, 0.35);
+    }
+
+    .bubble.selected:hover {
+      transform: scale(1.32);
+    }
   }
 
   .bubble.selected {
