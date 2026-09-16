@@ -1,4 +1,5 @@
 import type { HourlyWeather, Spot, SpotWeather } from '../types'
+import { ForecastCache, checkResponse, serialized } from './forecastCache'
 
 const API = 'https://api.open-meteo.com/v1/forecast'
 
@@ -23,42 +24,72 @@ interface OpenMeteoResponse {
   hourly: OpenMeteoHourly
 }
 
+const HOURLY = [
+  'temperature_2m',
+  'pressure_msl',
+  'wind_speed_10m',
+  'wind_direction_10m',
+  'cloud_cover',
+  'precipitation',
+]
+
+const cache = new ForecastCache<OpenMeteoHourly>('ankesi.weather.v1', `${PAST_DAYS}/${FORECAST_DAYS}/${HOURLY.join(',')}`)
+
 /**
- * Fetch hourly weather for all spots in one request. Open-Meteo accepts
- * comma-separated coordinate lists and returns one object per location in
- * the same order. Times are requested in UTC and parsed as absolute
- * instants so the browser's own timezone does not matter.
+ * Hourly weather for every spot. Locations with a fresh cached series are
+ * served from localStorage; the rest go to Open-Meteo in one request
+ * (comma-separated coordinates, one object per location in order). If the
+ * request fails and every missing spot still has stale cached data, that
+ * data is returned with `stale: true` instead of throwing. Times are UTC
+ * instants, so the browser's timezone does not matter.
  */
-export async function fetchWeatherForSpots(spots: Spot[]): Promise<SpotWeather[]> {
+export const fetchWeatherForSpots = serialized(fetchWeatherForSpotsNow)
+
+async function fetchWeatherForSpotsNow(spots: Spot[]): Promise<SpotWeather[]> {
+  const now = Date.now()
+  const out: SpotWeather[] = []
+  const missing: Spot[] = []
+  for (const s of spots) {
+    const hit = cache.fresh(s.id, now)
+    if (hit) out.push({ spotId: s.id, hourly: toHourly(hit.data), fetchedAt: new Date(hit.fetchedAt) })
+    else missing.push(s)
+  }
+  if (missing.length === 0) return out
+
+  try {
+    const list = await request(missing)
+    const fetchedAt = new Date()
+    list.forEach((entry, i) => {
+      cache.put(missing[i].id, entry.hourly, fetchedAt.getTime())
+      out.push({ spotId: missing[i].id, hourly: toHourly(entry.hourly), fetchedAt })
+    })
+    cache.flush(now)
+    return out
+  } catch (e) {
+    // Fall back to whatever is still usable; surface the failure otherwise.
+    const fallback: SpotWeather[] = []
+    for (const s of missing) {
+      const hit = cache.stale(s.id, now)
+      if (!hit) throw e
+      fallback.push({ spotId: s.id, hourly: toHourly(hit.data), fetchedAt: new Date(hit.fetchedAt), stale: true })
+    }
+    return [...out, ...fallback]
+  }
+}
+
+async function request(spots: Spot[]): Promise<OpenMeteoResponse[]> {
   const params = new URLSearchParams({
     latitude: spots.map((s) => s.lat.toFixed(4)).join(','),
     longitude: spots.map((s) => s.lon.toFixed(4)).join(','),
-    hourly: [
-      'temperature_2m',
-      'pressure_msl',
-      'wind_speed_10m',
-      'wind_direction_10m',
-      'cloud_cover',
-      'precipitation',
-    ].join(','),
+    hourly: HOURLY.join(','),
     past_days: String(PAST_DAYS),
     forecast_days: String(FORECAST_DAYS),
     timezone: 'UTC',
   })
-
   const res = await fetch(`${API}?${params.toString()}`)
-  if (!res.ok) {
-    throw new Error(`Open-Meteo responded ${res.status}`)
-  }
+  await checkResponse(res, 'Open-Meteo')
   const json = (await res.json()) as OpenMeteoResponse | OpenMeteoResponse[]
-  const list = Array.isArray(json) ? json : [json]
-  const fetchedAt = new Date()
-
-  return list.map((entry, i) => ({
-    spotId: spots[i].id,
-    hourly: toHourly(entry.hourly),
-    fetchedAt,
-  }))
+  return Array.isArray(json) ? json : [json]
 }
 
 function toHourly(h: OpenMeteoHourly): HourlyWeather[] {

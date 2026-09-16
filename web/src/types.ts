@@ -93,6 +93,8 @@ export interface SpotWeather {
   hourly: HourlyWeather[]
   marine?: MarineHourly[]
   fetchedAt: Date
+  /** Served from an old cache because the provider refused a refresh. */
+  stale?: boolean
 }
 
 export type FactorKey =
