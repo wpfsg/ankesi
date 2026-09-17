@@ -7,7 +7,7 @@ import type { Lang } from '../i18n'
 import { bandOf } from '../lib/scoring'
 import { fmtTime } from '../lib/format'
 import { paths } from '../lib/routes'
-import { displayNameOf } from '../lib/displayName'
+import { displayNameOf, initialOf } from '../lib/displayName'
 import { MiniBubble } from '../styles/shared'
 import { LangSwitch, NavLinks } from '../layout/Nav'
 import { ThemeToggle } from './ThemeToggle'
@@ -35,6 +35,8 @@ interface Props {
   spots: Spot[]
   results: Record<string, SpotResult>
   user: User | null
+  /** Saved profile name; falls back to the auth provider's name or email. */
+  displayName?: string
   onSelect: (id: string) => void
   onAccount: () => void
   /** When the weather was last fetched; shown next to the controls. */
@@ -44,7 +46,7 @@ interface Props {
 /** Fixed glass header: brand, links, search, theme, language, Premium,
  *  account. Used by the map and by every content page. Publishes its height
  *  as --header-h so the bottom sheet, pills and page content sit below it. */
-export function Header({ spots, results, user, onSelect, onAccount, updatedAt }: Props) {
+export function Header({ spots, results, user, displayName, onSelect, onAccount, updatedAt }: Props) {
   const { t, i18n } = useTranslation()
   const lang = (i18n.language === 'en' ? 'en' : 'ka') as Lang
   const [query, setQuery] = useState('')
@@ -154,7 +156,7 @@ export function Header({ spots, results, user, onSelect, onAccount, updatedAt }:
 
         <AccountBtn type="button" onClick={onAccount} aria-label={t('account.open')}>
           {user ? (
-            <Avatar>{(displayNameOf(user)[0] ?? '?').toUpperCase()}</Avatar>
+            <Avatar>{initialOf(displayName || displayNameOf(user))}</Avatar>
           ) : (
             <>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">

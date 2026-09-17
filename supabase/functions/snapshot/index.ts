@@ -36,8 +36,11 @@ function num(v: unknown): number | null {
 }
 
 Deno.serve(async (req) => {
+  // The function runs with verify_jwt = false (pg_cron sends no JWT), so the
+  // shared secret is the only gate. Refuse to run without one.
   const secret = Deno.env.get('CRON_SECRET')
-  if (secret && req.headers.get('x-cron-secret') !== secret) {
+  if (!secret) return new Response('CRON_SECRET is not set', { status: 500 })
+  if (req.headers.get('x-cron-secret') !== secret) {
     return new Response('forbidden', { status: 403 })
   }
 

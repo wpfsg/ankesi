@@ -52,6 +52,15 @@ export function fmtDate(d: Date, lang: string): string {
   }).format(d)
 }
 
+export function fmtDay(d: Date, lang: string): string {
+  return new Intl.DateTimeFormat(intlLocale(lang), {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: TZ,
+  }).format(d)
+}
+
 /** Calendar parts in Tbilisi local time without Intl overhead. */
 export function tbilisiParts(d: Date): { dateKey: string; hour: number } {
   const local = new Date(d.getTime() + TBILISI_OFFSET_MS)

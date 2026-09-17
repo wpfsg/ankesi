@@ -1,0 +1,13 @@
+{
+  "name": "ankesi-supabase-tests",
+  "private": true,
+  "type": "module",
+  "description": "Applies the migrations and seed to an embedded Postgres and runs the row-level-security scenarios. No Docker needed.",
+  "scripts": {
+    "test": "node run.mjs"
+  },
+  "devDependencies": {
+    "embedded-postgres": "^18.4.0-beta.17",
+    "pg": "^8.23.0"
+  }
+}

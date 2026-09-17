@@ -177,3 +177,21 @@ export interface Catch {
 }
 
 export type Band = 'none' | 'dead' | 'slow' | 'ok' | 'good' | 'great'
+
+/** The signed-in user's own row in `profiles`. */
+export interface Profile {
+  id: string
+  displayName: string | null
+  locale: 'ka' | 'en'
+  createdAt: Date
+}
+
+/** A paid pond the user submitted; approved once a moderator checks it. */
+export interface PondSubmission {
+  id: string
+  nameKa: string
+  nameEn: string
+  approved: boolean
+  feeGel: number | null
+  createdAt: Date
+}

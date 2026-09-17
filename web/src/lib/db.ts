@@ -1,4 +1,5 @@
-import type { Catch, Report, Spot, SpeciesId, HourScore, Region, SpotType, DepthClass } from '../types'
+import type { Catch, Report, Spot, SpeciesId, HourScore, Region, SpotType, DepthClass, Profile, PondSubmission } from '../types'
+import type { Lang } from '../i18n'
 import { supabase } from './supabase'
 import { downscaleImage } from './image'
 import { MODEL_VERSION } from './scoring'
@@ -104,7 +105,8 @@ export async function insertReport(input: {
     weather_snapshot: snapshot(input.snap),
   })
   if (error) {
-    if (error.code === '23505') return 'too-soon'
+    // Raised by the reports_rate_limit trigger: one report per spot per 30 min.
+    if (error.code === 'AK429') return 'too-soon'
     throw error
   }
   return 'ok'
@@ -304,4 +306,111 @@ export async function submitPond(input: {
     approved: false,
   })
   if (error) throw error
+}
+
+// ---------------------------------------------------------------- profiles
+
+interface ProfileRow {
+  id: string
+  display_name: string | null
+  locale: string
+  created_at: string
+}
+
+function toProfile(r: ProfileRow): Profile {
+  return {
+    id: r.id,
+    displayName: r.display_name,
+    locale: r.locale === 'en' ? 'en' : 'ka',
+    createdAt: new Date(r.created_at),
+  }
+}
+
+const PROFILE_COLS = 'id, display_name, locale, created_at'
+
+export async function fetchProfile(userId: string): Promise<Profile | null> {
+  const sb = need()
+  const { data, error } = await sb.from('profiles').select(PROFILE_COLS).eq('id', userId).maybeSingle()
+  if (error) throw error
+  return data ? toProfile(data as ProfileRow) : null
+}
+
+/** Upsert, so a row the sign-up trigger missed gets created on first save. */
+export async function saveProfile(userId: string, displayName: string): Promise<Profile> {
+  const sb = need()
+  const name = displayName.trim().slice(0, 40) || null
+  const { data, error } = await sb
+    .from('profiles')
+    .upsert({ id: userId, display_name: name }, { onConflict: 'id' })
+    .select(PROFILE_COLS)
+    .single()
+  if (error) throw error
+  return toProfile(data as ProfileRow)
+}
+
+export interface MyStats {
+  catches: number
+  reports: number
+}
+
+export async function fetchMyStats(userId: string): Promise<MyStats> {
+  const sb = need()
+  const [c, r] = await Promise.all([
+    sb.from('catches').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+    sb.from('reports').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+  ])
+  if (c.error) throw c.error
+  if (r.error) throw r.error
+  return { catches: c.count ?? 0, reports: r.count ?? 0 }
+}
+
+// ------------------------------------------------------- my pond submissions
+
+interface PondRow {
+  id: string
+  name_ka: string
+  name_en: string
+  approved: boolean
+  fee_gel: number | null
+  created_at: string
+}
+
+export async function fetchMyPonds(userId: string): Promise<PondSubmission[]> {
+  const sb = need()
+  const { data, error } = await sb
+    .from('spots')
+    .select('id, name_ka, name_en, approved, fee_gel, created_at')
+    .eq('owner_id', userId)
+    .eq('source', 'pond')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return ((data ?? []) as PondRow[]).map((r) => ({
+    id: r.id,
+    nameKa: r.name_ka,
+    nameEn: r.name_en,
+    approved: r.approved,
+    feeGel: r.fee_gel,
+    createdAt: new Date(r.created_at),
+  }))
+}
+
+/** Only a pending pond can be withdrawn; once approved it is the moderator's. */
+export async function withdrawPond(id: string): Promise<void> {
+  const sb = need()
+  const { error } = await sb.from('spots').delete().eq('id', id).eq('approved', false)
+  if (error) throw error
+}
+
+// ---------------------------------------------------------------- waitlist
+
+/** Premium launch list. The table is insert-only for the API, so there is no
+ *  `.select()` after the insert; a duplicate email + plan counts as joined. */
+export async function joinWaitlist(input: { email: string; plan: string; locale: Lang }): Promise<'ok' | 'exists'> {
+  const sb = need()
+  const { error } = await sb.from('waitlist').insert({ email: input.email.trim(), plan: input.plan, locale: input.locale })
+  if (error) {
+    if (error.code === '23505') return 'exists'
+    throw error
+  }
+  return 'ok'
 }

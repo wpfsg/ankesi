@@ -12,6 +12,7 @@ import { applyCommunity, scoreSpot } from "../lib/scoring";
 import { fmtTime } from "../lib/format";
 import { hasBackend } from "../lib/supabase";
 import { useSession } from "../lib/useSession";
+import { useProfile } from "../lib/useProfile";
 import {
   fetchApprovedPonds,
   fetchRecentReports,
@@ -47,6 +48,7 @@ export default function MapPage() {
   const { t, i18n } = useTranslation();
   const lang: Lang = i18n.language === "en" ? "en" : "ka";
   const { user } = useSession();
+  const { displayName } = useProfile(user);
   const mapLayer = useMapLayer();
   const [params, setParams] = useSearchParams();
 
@@ -270,6 +272,7 @@ export default function MapPage() {
         spots={spots}
         results={results}
         user={user}
+        displayName={displayName}
         onSelect={setSelectedId}
         onAccount={() => setModal("account")}
         updatedAt={fetchedAt}

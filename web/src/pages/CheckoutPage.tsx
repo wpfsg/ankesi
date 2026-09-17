@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
 import { planById } from '../content/pricing'
+import { hasBackend } from '../lib/backend'
 import { paths } from '../lib/routes'
 import { Head } from '../lib/head'
 import { fmtGel } from '../lib/format'
@@ -12,20 +13,35 @@ import { Card, Eyebrow, Facts, GhostLink, GlassInput, H1, H2, Lead, Muted, Page,
 
 const KEY = 'ankesi.premium.waitlist'
 
-/** Stub checkout: no payments yet. Shows the chosen plan and takes an
- *  email for the launch waitlist. */
+/** Checkout without payments yet: shows the chosen plan and takes an email
+ *  for the launch list. Saved to the backend when there is one, otherwise on
+ *  the device. The database module loads on submit only, so this
+ *  prerendered page does not ship supabase-js. */
 export function CheckoutPage() {
   const { t } = useTranslation()
   const lang = useLang()
   const { plan: planId } = useParams()
   const plan = planById(planId)
   const [email, setEmail] = useState('')
-  const [done, setDone] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [done, setDone] = useState<'server' | 'device' | null>(null)
 
   if (!plan) return <NotFoundPage />
 
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault()
+    setBusy(true)
+    if (hasBackend) {
+      try {
+        const { joinWaitlist } = await import('../lib/db')
+        await joinWaitlist({ email, plan: plan.id, locale: lang })
+        setDone('server')
+        setBusy(false)
+        return
+      } catch {
+        // fall back to the device
+      }
+    }
     try {
       const list = JSON.parse(localStorage.getItem(KEY) ?? '[]') as unknown[]
       list.push({ email, plan: plan.id, lang, at: new Date().toISOString() })
@@ -33,7 +49,8 @@ export function CheckoutPage() {
     } catch {
       /* storage unavailable */
     }
-    setDone(true)
+    setDone('device')
+    setBusy(false)
   }
 
   const crumbs = [
@@ -71,10 +88,10 @@ export function CheckoutPage() {
               <p>
                 <strong>{t('checkout.sentTitle')}</strong>
               </p>
-              <p>{t('checkout.sent')}</p>
+              <p>{done === 'server' ? t('checkout.sentServer') : t('checkout.sent')}</p>
             </Prose>
           ) : (
-            <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <form onSubmit={(e) => void submit(e)} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <Prose>
                 <p>{t('checkout.notify')}</p>
               </Prose>
@@ -87,7 +104,9 @@ export function CheckoutPage() {
                 aria-label={t('checkout.email')}
                 autoComplete="email"
               />
-              <PrimaryButton type="submit">{t('checkout.submit')}</PrimaryButton>
+              <PrimaryButton type="submit" disabled={busy}>
+                {t('checkout.submit')}
+              </PrimaryButton>
               <Muted>{t('checkout.privacy')}</Muted>
             </form>
           )}

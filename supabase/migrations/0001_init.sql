@@ -1,16 +1,32 @@
--- Ankesi — milestone 2 schema
--- Run in the Supabase SQL editor or with `supabase db push`.
--- Everything is under row-level security. The anon key can read public
--- data (approved spots, non-hidden reports, weather history) and nothing
--- else; writes require a signed-in user and are scoped to that user.
+-- Ankesi — schema for accounts, profiles, catches, reports, saved spots,
+-- paid ponds, the launch list and hourly weather history.
+--
+-- Apply with `supabase db push --include-seed` (or paste into the SQL
+-- editor followed by seed.sql). Everything is under row-level security:
+-- the anon key can read public data (approved spots, visible reports, public
+-- catches, weather history) and join the launch list; every other write
+-- requires a signed-in user and is scoped to that user.
+
+-- ----------------------------------------------------------------- helpers
+
+create or replace function public.touch_updated_at()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
 
 -- ---------------------------------------------------------------- profiles
+-- One row per auth user, created by trigger on sign-up. Only the owner can
+-- read or edit it; other users see the display name through public_profiles.
 
 create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
-  display_name text,
+  display_name text check (display_name is null or char_length(display_name) between 1 and 40),
   locale text not null default 'ka' check (locale in ('ka', 'en')),
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 alter table public.profiles enable row level security;
@@ -18,10 +34,19 @@ alter table public.profiles enable row level security;
 create policy "profiles: read own" on public.profiles
   for select to authenticated using (id = auth.uid());
 
+-- Normally the trigger below creates the row; this lets the client repair a
+-- missing one with an upsert.
+create policy "profiles: insert own" on public.profiles
+  for insert to authenticated with check (id = auth.uid());
+
 create policy "profiles: update own" on public.profiles
   for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
 
--- Public view of names for report attribution, nothing else.
+create trigger profiles_touch before update on public.profiles
+  for each row execute function public.touch_updated_at();
+
+-- Names for report attribution. Deliberately runs as the view owner so it
+-- bypasses the owner-only policy on profiles; it exposes nothing else.
 create view public.public_profiles
   with (security_invoker = false) as
   select id, display_name from public.profiles;
@@ -38,7 +63,14 @@ begin
   insert into public.profiles (id, display_name)
   values (
     new.id,
-    coalesce(new.raw_user_meta_data ->> 'full_name', split_part(coalesce(new.email, ''), '@', 1))
+    left(
+      coalesce(
+        nullif(trim(new.raw_user_meta_data ->> 'full_name'), ''),
+        nullif(trim(new.raw_user_meta_data ->> 'name'), ''),
+        split_part(coalesce(new.email, ''), '@', 1)
+      ),
+      40
+    )
   )
   on conflict (id) do nothing;
   return new;
@@ -103,16 +135,17 @@ create policy "spots: owners edit own ponds" on public.spots
   using (owner_id = auth.uid() and source = 'pond')
   with check (owner_id = auth.uid() and source = 'pond');
 
--- Owners may edit their pond but never flip the moderation flag.
-revoke update (approved, source, owner_id) on public.spots from authenticated;
+create policy "spots: owners withdraw pending ponds" on public.spots
+  for delete to authenticated
+  using (owner_id = auth.uid() and source = 'pond' and not approved);
 
-create or replace function public.touch_updated_at()
-returns trigger language plpgsql as $$
-begin
-  new.updated_at = now();
-  return new;
-end;
-$$;
+-- Owners edit the listing but never the moderation flag, ownership or
+-- type. Column privileges only bite when the table-level UPDATE grant is
+-- gone, so revoke that first.
+revoke update on public.spots from anon, authenticated;
+grant update (name_ka, name_en, region, lat, lon, depth, species, access_ka, access_en,
+              note_ka, note_en, fee_gel, contact, hours)
+  on public.spots to authenticated;
 
 create trigger spots_touch before update on public.spots
   for each row execute function public.touch_updated_at();
@@ -172,6 +205,7 @@ create table public.reports (
 
 create index reports_spot_recent_idx on public.reports (spot_id, created_at desc);
 create index reports_recent_idx on public.reports (created_at desc) where not hidden;
+create index reports_user_spot_idx on public.reports (user_id, spot_id, created_at desc);
 
 alter table public.reports enable row level security;
 
@@ -185,9 +219,30 @@ create policy "reports: insert own" on public.reports
 create policy "reports: delete own" on public.reports
   for delete to authenticated using (user_id = auth.uid());
 
--- One report per user per spot per 30 minutes, to blunt spam.
-create unique index reports_rate_idx
-  on public.reports (user_id, spot_id, (date_trunc('hour', created_at) + (floor(extract(minute from created_at) / 30) * interval '30 minutes')));
+-- One report per user per spot per 30 minutes, to blunt spam. Raised as
+-- SQLSTATE AK429 so the client can show "too soon" instead of an error.
+create or replace function public.reports_rate_limit()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if exists (
+    select 1 from public.reports
+    where user_id = new.user_id
+      and spot_id = new.spot_id
+      and created_at > now() - interval '30 minutes'
+  ) then
+    raise exception 'too-soon' using errcode = 'AK429',
+      hint = 'One report per spot per 30 minutes.';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger reports_rate_limit before insert on public.reports
+  for each row execute function public.reports_rate_limit();
 
 -- Flags: three distinct flags hide a report.
 create table public.report_flags (
@@ -238,6 +293,7 @@ create policy "saved: all own" on public.saved_spots
   for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 -- ------------------------------------------------------- push subscriptions
+-- Stored now, used by the alerts job in milestone 3.
 
 create table public.push_subscriptions (
   id uuid primary key default gen_random_uuid(),
@@ -253,6 +309,29 @@ alter table public.push_subscriptions enable row level security;
 
 create policy "push: all own" on public.push_subscriptions
   for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- ---------------------------------------------------------------- waitlist
+-- Premium launch list from the checkout page. Anyone can join; nobody can
+-- read it through the API (moderators use the dashboard).
+
+create table public.waitlist (
+  id uuid primary key default gen_random_uuid(),
+  email text not null check (char_length(email) <= 254 and email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
+  plan text not null check (plan in ('monthly', 'annual', 'week')),
+  locale text not null default 'ka' check (locale in ('ka', 'en')),
+  user_id uuid default auth.uid() references auth.users (id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
+create unique index waitlist_email_plan_idx on public.waitlist (lower(email), plan);
+
+alter table public.waitlist enable row level security;
+
+create policy "waitlist: anyone may join" on public.waitlist
+  for insert to anon, authenticated
+  with check (user_id is null or user_id = auth.uid());
+
+revoke select, update, delete on public.waitlist from anon, authenticated;
 
 -- --------------------------------------------------------- weather history
 -- Written hourly by the `snapshot` edge function with the service role.

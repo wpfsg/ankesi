@@ -11,6 +11,7 @@
     "og": "node scripts/og.mjs",
     "shots": "node scripts/shots.mjs",
     "lint": "oxlint",
+    "seed": "node scripts/gen-seed.mjs",
     "preview": "vite preview",
     "serve": "node scripts/serve.mjs"
   },

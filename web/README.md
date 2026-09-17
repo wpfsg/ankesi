@@ -161,6 +161,8 @@ in `src/content/faq.ts`; plans and features by the ids in
 
 | Variable | Purpose |
 |---|---|
+| `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | Supabase project URL and anon (or publishable) key; without them account features are off |
+| `VITE_AUTH_EMAIL_CODE` | `1` shows the 6-digit code field after "send link"; only once the custom sign-in email is live (needs SMTP) |
 | `VITE_BASE` | Deployment base path (`/ankesi/` on the project page, `/` on a domain) |
 | `VITE_SITE_ORIGIN` | Absolute origin for canonical, hreflang, sitemap and OG URLs |
 | `VITE_CONTACT_EMAIL` | Contact address on the FAQ page (falls back to the GitHub issues link) |
@@ -173,21 +175,31 @@ the project URL and anon key in `.env.local` (see `.env.example`). Without
 them the app runs read-only and account features show a notice.
 
 What the backend adds:
-- Sign in with a magic link or Google. Browsing never requires an account.
+- Sign in with a magic link (plus the 6-digit code from the same email once
+  the custom template is live), or with Google. The first sign-in creates the
+  account; browsing never needs one.
+- Profile: a display name shown on reports (editable in the account sheet),
+  join date, catch and report counts, and the user's pond submissions with
+  their moderation state.
 - Catch log with photo, weight, length, bait, method, note, private by default.
   The current score, factors, and water temperature are attached to every catch.
-- Community reports (dead … great) per spot. Recent reports shift the spot's
-  score by up to ±15 points with a 48 h half-life and raise confidence to
-  "high" at three or more reports. Three flags hide a report.
+- Community reports (dead … great) per spot, one per spot per 30 minutes.
+  Recent reports shift the spot's score by up to ±15 points with a 48 h
+  half-life and raise confidence to "high" at three or more reports. Three
+  flags hide a report.
 - Saved spots (alerts come in milestone 3).
-- Paid pond submissions by owners, shown on the map after moderation.
+- Paid pond submissions by owners, shown on the map after moderation; owners
+  can edit the listing or withdraw a pending one, never approve it themselves.
+- The checkout page's launch list is stored server-side (`waitlist`).
 - Hourly weather history via the `snapshot` edge function, for refitting the
   model weights against real catches.
 
 Files: `src/lib/supabase.ts`, `src/lib/db.ts`, `src/lib/useSession.ts`,
+`src/lib/useProfile.ts`,
 `src/components/{AccountSheet,CatchForm,ReportForm,MyCatches,PaidPondForm,ModalSheet}.tsx`,
 `../supabase/migrations/0001_init.sql`, `../supabase/seed.sql`
-(regenerate with `node scripts/gen-seed.mjs`), `../supabase/functions/snapshot/`.
+(regenerate with `npm run seed`), `../supabase/functions/snapshot/`,
+`../supabase/tests/` (schema and RLS scenarios on an embedded Postgres).
 
 ## Known gaps before launch
 
@@ -195,5 +207,5 @@ Files: `src/lib/supabase.ts`, `src/lib/db.ts`, `src/lib/useSession.ts`,
 - Spot coordinates are approximate; check each against OpenStreetMap.
 - Georgian species names need a native-speaker review.
 - Browsers cannot read a phone barometer; a manual reading field is provided.
-- Accounts, catch log, community reports, paid-pond submissions, and push
-  alerts are milestone 2 and 3 (Supabase). See `../docs/MVP_SPEC.md`.
+- Accounts and community features need a connected Supabase project
+  (`../supabase/SETUP.md`); push alerts and payments are milestone 3.

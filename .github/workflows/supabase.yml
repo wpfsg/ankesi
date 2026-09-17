@@ -1,0 +1,78 @@
+name: Backend (Supabase)
+
+# Every change under supabase/ runs the schema + row-level-security scenarios
+# on an embedded Postgres. On main, a passing run then pushes migrations,
+# seed, auth/storage config and the edge function to the linked project.
+#
+# The deploy job only runs when the repository has SUPABASE_ACCESS_TOKEN;
+# until then pushes are tested but deployed by hand (supabase/SETUP.md §2).
+# One-time setup: repository secrets SUPABASE_ACCESS_TOKEN (account token),
+# SUPABASE_PROJECT_ID (project ref), SUPABASE_DB_PASSWORD. Optional:
+# SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID / _SECRET once Google sign-in is
+# enabled in config.toml.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/supabase.yml'
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - '.github/workflows/supabase.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: supabase-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Schema and RLS scenarios
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: supabase/tests
+    outputs:
+      deploy: ${{ steps.creds.outputs.present }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: supabase/tests/package-lock.json
+      - run: npm ci
+      - run: npm test
+      # Secrets are not readable from a job-level "if", so surface the fact here.
+      - id: creds
+        run: echo "present=${{ secrets.SUPABASE_ACCESS_TOKEN != '' }}" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Push migrations, config and functions
+    needs: test
+    if: github.event_name != 'pull_request' && needs.test.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID }}
+      SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - run: supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_ID }}"
+
+      - name: Migrations and seed
+        run: supabase db push --include-seed
+
+      - name: Auth, storage and function settings from config.toml
+        run: supabase config push --yes
+
+      - name: Edge functions
+        run: supabase functions deploy snapshot
