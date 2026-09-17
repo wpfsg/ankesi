@@ -8,6 +8,8 @@ const en: Translation = {
   search: {
     placeholder: 'Lake, river, region…',
     placeholderShort: 'Search…',
+    all: 'All spots',
+    matches: 'Matches',
     noResults: 'Nothing found',
   },
   status: {
@@ -240,6 +242,7 @@ const en: Translation = {
     savedSpots: 'Saved spots',
     noSaved: 'Nothing saved yet. Tap "Save" on a spot.',
     submitPond: 'Add a paid pond',
+    openProfile: 'Open profile',
     noBackend: 'Backend is not connected yet. See supabase/SETUP.md.',
     signInNeeded: 'Sign in to do this.',
     code: '6-digit code from the email',
@@ -257,6 +260,98 @@ const en: Translation = {
     pondLive: 'On the map',
     withdraw: 'Withdraw',
   },
+  profile: {
+    eyebrow: 'Account',
+    angler: 'Angler',
+    lead: 'Your catches, saved spots and profile.',
+
+    signIn: {
+      eyebrow: 'Account',
+      title: 'Sign in to Ankesi',
+      lead: 'You only need an account for three things: logging catches, sending reports and saving spots. The map and the scores are always open.',
+      email: 'Email',
+      send: 'Send the sign-in link',
+      sending: 'Sending…',
+      or: 'or',
+      google: 'Continue with Google',
+      noSignup: 'No separate sign-up — your first sign-in creates the account.',
+      sentTitle: 'Check your email',
+      sentBody: 'A sign-in link is on its way to {{email}}. Open it on this device.',
+      another: 'Use another email',
+      code: '6-digit code',
+      codeHint: 'If the link does not open, type the code from the email instead.',
+      verify: 'Sign in with the code',
+    },
+
+    why: {
+      catches: {
+        title: 'Catch log',
+        body: 'Photo, weight, bait — and the weather of that minute, attached automatically.',
+      },
+      reports: {
+        title: 'Reports',
+        body: 'Tell other anglers how the bite really is. That is what corrects a spot’s score.',
+      },
+      saved: {
+        title: 'Saved spots',
+        body: 'Your spots in one list — and alerts when conditions turn good, soon.',
+      },
+    },
+
+    name: 'Name',
+    editName: 'Change name',
+    save: 'Save',
+    saving: 'Saving…',
+    cancel: 'Cancel',
+    nameHint: 'Other anglers see this name on your reports.',
+    joined: 'Since {{date}}',
+    signOut: 'Sign out',
+    privacy: 'Others only ever see your name. Your email and your catch log stay private until you share them.',
+
+    stats: {
+      catches: 'Catches',
+      reports: 'Reports',
+      saved: 'Saved',
+      ponds: 'My ponds',
+    },
+
+    catches: {
+      title: 'My catches',
+      empty: 'No catches yet.',
+      emptyCta: 'Open a spot on the map and tap "Log a catch" — the weather and the score attach themselves.',
+      toMap: 'Go to the map',
+      delete: 'Delete',
+      confirm: 'Delete?',
+      public: 'Public',
+    },
+
+    saved: {
+      title: 'Saved spots',
+      empty: 'Nothing saved yet. Tap "Save" on a spot.',
+      remove: 'Remove',
+    },
+
+    ponds: {
+      title: 'My paid ponds',
+      pending: 'In review',
+      live: 'On the map',
+      withdraw: 'Withdraw',
+      add: 'Add a paid pond',
+      hint: 'A submitted pond appears on the map once it is checked.',
+    },
+
+    bests: {
+      title: 'Your records',
+      heaviest: 'Heaviest',
+      topSpecies: 'Most caught',
+      topSpot: 'Favourite spot',
+      times: '{{count}}×',
+    },
+
+    loading: 'Loading…',
+    noBackend: 'Accounts are not enabled in this environment.',
+  },
+
   actions: {
     logCatch: 'Log catch',
     report: 'Report',

@@ -5,6 +5,8 @@ import styled from 'styled-components'
 import { SPOTS } from '../data/spots'
 import { paths } from '../lib/routes'
 import { useLiveScores } from '../lib/useLiveScores'
+import { useSession } from '../lib/useSession'
+import { useProfile } from '../lib/useProfile'
 import { Header } from '../components/Header'
 import { Footer } from './Footer'
 import { TabBar } from './TabBar'
@@ -86,6 +88,8 @@ export function SiteLayout({ children }: { children?: ReactNode }) {
   const lang = useLang()
   const navigate = useNavigate()
   const live = useLiveScores()
+  const { user } = useSession()
+  const { displayName } = useProfile(user)
   return (
     <>
       <Backdrop aria-hidden="true" />
@@ -93,10 +97,10 @@ export function SiteLayout({ children }: { children?: ReactNode }) {
       <Header
         spots={SPOTS}
         results={live.results ?? {}}
-        user={null}
+        user={user}
+        displayName={displayName}
         onSelect={(id) => navigate(paths.spot(lang, id))}
         onAccount={() => navigate(paths.account(lang))}
-        updatedAt={live.updatedAt}
       />
       <Main id="main" tabIndex={-1}>
         <Suspense fallback={<Pending aria-busy="true" />}>{children ?? <Outlet />}</Suspense>

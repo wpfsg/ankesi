@@ -1,5 +1,4 @@
 import styled, { css } from 'styled-components'
-import { hideWhileSearching } from '../styles/shared'
 
 /* iOS-style liquid glass: heavy blur and saturation, a bright top edge and
    a soft outer shadow so the rail reads as a floating slab over the map. */
@@ -29,7 +28,6 @@ export const Rail = styled.nav<{ $hidden?: boolean }>`
       inset 0 -1px 0 rgba(255, 255, 255, 0.04);
   }
 
-  ${hideWhileSearching}
   ${(p) =>
     p.$hidden &&
     css`
@@ -56,7 +54,9 @@ export const RailSwatch = styled.span`
   box-shadow:
     inset 0 0 0 1px rgba(0, 0, 0, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  transition: box-shadow 150ms, transform 150ms;
+  transition:
+    box-shadow var(--t) var(--ease),
+    transform var(--t) var(--ease);
 
   @media (max-width: 480px) {
     width: 38px;
@@ -78,7 +78,10 @@ export const RailItem = styled.button`
   font-weight: 600;
   line-height: 1;
   letter-spacing: 0.01em;
-  transition: background 150ms, color 150ms, transform 150ms;
+  transition:
+    background var(--t) var(--ease),
+    color var(--t) var(--ease),
+    transform var(--t) var(--ease);
 
   &:hover {
     color: var(--fg);

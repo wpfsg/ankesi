@@ -20,6 +20,8 @@ export function staticRoutes(): StaticRoute[] {
     { path: '/faq', kind: 'page' },
     { path: '/pricing', kind: 'page' },
     { path: '/reports', kind: 'page' },
+    // Private: prerendered as the signed-out shell, kept out of the sitemap.
+    { path: '/account', kind: 'page', noindex: true },
     ...PLANS.map((p) => ({ path: `/checkout/${p.id}`, kind: 'checkout' as const, noindex: true })),
   ]
 }

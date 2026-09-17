@@ -38,9 +38,9 @@ river level are estimates until gauges are connected, and are labeled so.
 ## Status
 
 Milestone 1 (map, live scores, trip planner, bilingual UI) is done.
-Milestone 2 (accounts with profiles, catch log, community reports, saved
-spots, paid ponds, Premium launch list) is built and its schema is verified
-by `supabase/tests`; it needs a Supabase project to go live. Milestone 3
+Milestone 2 (accounts with a profile page, catch log, community reports,
+saved spots, paid ponds, Premium launch list) is live on a Supabase project;
+its schema is verified by `supabase/tests`. Milestone 3
 (PWA, alerts, payments) is next.
 Regulations and closed seasons are not yet verified with the Ministry of
 Environmental Protection and Agriculture; the app says so on every spot.

@@ -17,22 +17,23 @@ export const Divider = styled.div`
   }
 `
 
-/** Display-name field with its save button on one line. */
-export const NameRow = styled.div`
+/** Who is signed in: initial, name, email. */
+export const Identity = styled.div`
   display: flex;
-  gap: 8px;
-  align-items: stretch;
-
-  input {
-    flex: 1;
-    min-width: 0;
-  }
+  align-items: center;
+  gap: 12px;
 `
 
-/** Status chips on a pond submission. */
-export const ChipRow = styled.div`
-  display: flex;
-  gap: 6px;
-  align-items: center;
+export const Initial = styled.span`
   flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--pri-fg);
+  background: linear-gradient(140deg, var(--accent), var(--pri));
+  box-shadow: var(--pri-shadow);
 `

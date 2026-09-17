@@ -1,6 +1,5 @@
-import styled, { css } from "styled-components";
-import { Link } from "react-router";
-import { glass, tabular } from "../styles/shared";
+import styled, { css, keyframes } from "styled-components";
+import { glass, liquidGlass, tabular, thinScrollbar } from "../styles/shared";
 
 export const HeaderRoot = styled.header`
   ${glass}
@@ -86,31 +85,6 @@ export const NavSlot = styled.nav`
   }
 `;
 
-/** The one primary call to action in the header. */
-export const PremiumLink = styled(Link)`
-  display: none;
-
-  @media (min-width: 720px) {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 38px;
-    padding: 0 16px;
-    border-radius: 999px;
-    background: var(--pri);
-    color: var(--pri-fg);
-    font-weight: 650;
-    font-size: 14px;
-    text-decoration: none;
-    box-shadow: var(--pri-shadow);
-    white-space: nowrap;
-
-    &:hover {
-      filter: brightness(1.05);
-    }
-  }
-`;
-
 export const BrandName = styled.span`
   display: none;
 
@@ -170,20 +144,7 @@ export const IconToggle = styled.button`
   &:hover {
     color: var(--fg);
   }
-`
-
-/** "Updated HH:MM" next to the controls; hidden on phones. */
-export const Updated = styled.span`
-  display: none;
-  font-size: 12.5px;
-  color: var(--fg-3);
-  white-space: nowrap;
-  ${tabular}
-
-  @media (min-width: 720px) {
-    display: inline;
-  }
-`
+`;
 
 export const LangChip = styled.div`
   display: flex;
@@ -202,12 +163,12 @@ export const LangChip = styled.div`
     color: var(--fg-2);
   }
 
-  button[aria-pressed='true'] {
+  button[aria-pressed="true"] {
     background: var(--ctl-bg);
     color: var(--fg);
     box-shadow: 0 1px 3px rgba(15, 23, 32, 0.14);
   }
-`
+`;
 
 export const Avatar = styled.span`
   width: 26px;
@@ -219,10 +180,20 @@ export const Avatar = styled.span`
   color: var(--pri-fg);
   font-size: 12px;
   font-weight: 700;
-`
+`;
 
 /* Secondary on purpose: the header has one primary action, Premium. On
-   phones the tab bar carries Account, so the button is hidden there. */
+   phones the tab bar carries Account, so the whole control is hidden there. */
+export const AccountWrap = styled.div`
+  display: none;
+
+  @media (min-width: 720px) {
+    display: block;
+    position: relative;
+    flex: none;
+  }
+`;
+
 export const AccountBtn = styled.button`
   display: none;
 
@@ -246,7 +217,7 @@ export const AccountBtn = styled.button`
       color: var(--fg);
     }
   }
-`
+`;
 
 export const AccountLabel = styled.span`
   display: none;
@@ -256,20 +227,48 @@ export const AccountLabel = styled.span`
   }
 `;
 
-const Results = styled.div`
-  ${glass}
-  border-radius: var(--radius-md);
-  padding: 6px;
-  max-height: 50vh;
-  overflow-y: auto;
+const dropIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
 `;
 
-export const HeaderResults = styled(Results)`
-  position: absolute;
-  top: calc(100% + 6px);
+/* Same entrance for the desktop panel, which is centred with a transform. */
+const dropInCentred = keyframes`
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-6px);
+  }
+`;
+
+/** The search dropdown: a glass panel under the field. The list inside is
+ *  capped at five rows; everything below that scrolls. */
+export const HeaderResults = styled.div`
+  --row-h: 52px;
+  /* Fixed, and a sibling of the header rather than a child: inside an element
+     that already has a backdrop-filter, this one would only ever blur the
+     header, not the page showing through underneath. */
+  position: fixed;
+  /* max() so a stale 0 from the header's own measurement can never park the
+     panel on top of the bar. */
+  top: calc(max(var(--header-h, 64px), 56px) + 6px);
   left: 12px;
   right: 12px;
-  background: var(--glass-bg-strong);
+  z-index: 13;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  /* Same tone as the header bar it hangs from, blurred a little harder. */
+  ${liquidGlass}
+  transform-origin: top center;
+  animation: ${dropIn} 160ms var(--spring);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 
   @media (min-width: 720px) {
     /* sit directly under the centred search field */
@@ -277,7 +276,37 @@ export const HeaderResults = styled(Results)`
     right: auto;
     width: min(560px, 36vw, calc(100% - 40px));
     transform: translateX(-50%);
+    animation-name: ${dropInCentred};
   }
+`;
+
+/** What the list below is: "All spots" or the number of matches. */
+export const ResultsHead = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px 8px;
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+
+  span {
+    ${tabular}
+    letter-spacing: 0;
+    text-transform: none;
+    font-weight: 600;
+  }
+`;
+
+export const ResultsList = styled.div`
+  padding: 0 6px 6px;
+  max-height: min(calc(var(--row-h) * 5 + 6px), 50vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  ${thinScrollbar}
 `;
 
 export const Result = styled.button<{ $muted?: boolean }>`
@@ -285,14 +314,22 @@ export const Result = styled.button<{ $muted?: boolean }>`
   align-items: center;
   gap: 12px;
   width: 100%;
+  height: var(--row-h);
   text-align: left;
-  padding: 10px 12px;
+  padding: 0 10px;
   border-radius: var(--radius-sm);
+  transition:
+    background var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease);
 
   &:hover,
   &:focus-visible {
     background: var(--glass-line);
     outline: none;
+  }
+
+  &[aria-selected="true"] {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
   }
 
   ${(p) =>
@@ -306,10 +343,102 @@ export const Result = styled.button<{ $muted?: boolean }>`
 export const ResultName = styled.span`
   flex: 1;
   min-width: 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 
   small {
+    font-weight: 500;
     display: block;
     color: var(--fg-2);
     font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+`;
+
+/* Account menu: a small glass card hanging off the avatar. Desktop only —
+   on phones the tab bar goes straight to the account page. Fixed, and a
+   sibling of the header rather than a child, for the same reason as the
+   search panel: nested inside the header's backdrop-filter it could only
+   blur the header, never the page behind it. */
+export const Menu = styled.div`
+  position: fixed;
+  top: calc(max(var(--header-h, 64px), 56px) + 8px);
+  right: calc(env(safe-area-inset-right, 0px) + 10px);
+  z-index: 13;
+  min-width: 216px;
+  padding: 6px;
+  border-radius: var(--radius-md);
+  ${liquidGlass}
+  box-shadow: var(--sh);
+  animation: menuIn 140ms var(--spring);
+
+  @keyframes menuIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+`;
+
+/** Which account this is: the avatar alone does not say. */
+export const MenuHead = styled.div`
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid var(--glass-line);
+  margin-bottom: 6px;
+
+  strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 650;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  small {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--fg-3);
+    overflow-wrap: anywhere;
+  }
+`;
+
+export const MenuItem = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: var(--r-ctl);
+  font-size: 14px;
+  font-weight: 550;
+  color: var(--fg);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+
+  svg {
+    flex: none;
+    color: var(--fg-3);
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: var(--row-hover);
+  }
+
+  &:hover svg,
+  &:focus-visible svg {
+    color: var(--fg-2);
   }
 `;

@@ -22,7 +22,6 @@ import {
 } from "../lib/db";
 import { MapView } from "../components/MapView";
 import { LayerSwitcher } from "../components/LayerSwitcher";
-import { ScoreLegend } from "../components/ScoreLegend";
 import { useMapLayer } from "../lib/mapLayer";
 import { Header } from "../components/Header";
 import { Splash } from "../components/Splash";
@@ -275,15 +274,9 @@ export default function MapPage() {
         displayName={displayName}
         onSelect={setSelectedId}
         onAccount={() => setModal("account")}
-        updatedAt={fetchedAt}
       />
 
       <LayerSwitcher hidden={selected !== null} />
-      <ScoreLegend
-        hidden={plannerOpen}
-        hideOnPhone={selected !== null}
-        score={snap.hour?.score}
-      />
 
       <TripPlanner
         spots={spots}

@@ -24,6 +24,8 @@ const PAGES = [
   ['pricing', '/ka/pricing'],
   ['checkout', '/en/checkout/annual'],
   ['reports', '/ka/reports'],
+  ['profile', '/ka/account'],
+  ['profile-en', '/en/account'],
   ['404', '/404.html'],
 ]
 const VIEWPORTS = [

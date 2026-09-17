@@ -25,6 +25,7 @@ const FaqPage = lazy(() => import('./pages/FaqPage').then((m) => ({ default: m.F
 const PricingPage = lazy(() => import('./pages/PricingPage').then((m) => ({ default: m.PricingPage })))
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then((m) => ({ default: m.CheckoutPage })))
 const ReportsPage = lazy(() => import('./pages/ReportsPage').then((m) => ({ default: m.ReportsPage })))
+const ProfilePage = lazy(() => import('./pages/ProfilePage').then((m) => ({ default: m.ProfilePage })))
 
 function RootRedirect() {
   return <Navigate to={paths.map(preferredLang())} replace />
@@ -94,6 +95,7 @@ export default function App() {
             <Route path="pricing" element={<PricingPage />} />
             <Route path="checkout/:plan" element={<CheckoutPage />} />
             <Route path="reports" element={<ReportsPage />} />
+            <Route path="account" element={<ProfilePage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Route>

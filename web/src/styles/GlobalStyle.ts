@@ -73,6 +73,13 @@ export const GlobalStyle = createGlobalStyle`
     --font-georgian: 'Noto Sans Georgian', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 
     --spring: cubic-bezier(0.2, 0.9, 0.3, 1.1);
+
+    /* Motion tokens. Every state change — hover, focus, press, current page,
+       theme — eases on these rather than snapping. */
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --t-fast: 180ms;
+    --t: 240ms;
+    --t-slow: 320ms;
   }
 
   /* Theme is set by lib/theme.ts as data-theme on <html>: saved choice, else OS. */
@@ -169,6 +176,10 @@ export const GlobalStyle = createGlobalStyle`
   body {
     background: var(--bg);
     color: var(--fg);
+    /* the theme flip fades instead of cutting */
+    transition:
+      background-color var(--t-slow) var(--ease),
+      color var(--t-slow) var(--ease);
     font-family: var(--font-latin);
     font-size: 14px;
     line-height: 1.45;
@@ -200,6 +211,38 @@ export const GlobalStyle = createGlobalStyle`
     padding: 0;
   }
 
+  /* Anything interactive eases between its states. Components that need a
+     different curve, or extra properties, declare their own transition — a
+     styled class outranks these element selectors and replaces it wholesale. */
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  summary,
+  label,
+  [role='button'],
+  [role='tab'],
+  [role='switch'],
+  [role='option'] {
+    transition:
+      color var(--t-fast) var(--ease),
+      background-color var(--t-fast) var(--ease),
+      border-color var(--t-fast) var(--ease),
+      box-shadow var(--t-fast) var(--ease),
+      opacity var(--t-fast) var(--ease),
+      filter var(--t-fast) var(--ease),
+      transform var(--t-fast) var(--ease);
+  }
+
+  /* Icons follow the colour of the control they sit in. */
+  svg {
+    transition:
+      color var(--t-fast) var(--ease),
+      fill var(--t-fast) var(--ease),
+      stroke var(--t-fast) var(--ease);
+  }
+
   button:focus-visible,
   a:focus-visible,
   input:focus-visible,
@@ -208,6 +251,23 @@ export const GlobalStyle = createGlobalStyle`
   summary:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  /* A theme flip repaints every surface at once, so for the length of the
+     fade each one eases to its new colour. lib/theme.ts drops the flag as
+     soon as the fade is over, so nothing else pays for the blanket rule. */
+  @media (prefers-reduced-motion: no-preference) {
+    :root[data-theme-shift] *,
+    :root[data-theme-shift] *::before,
+    :root[data-theme-shift] *::after {
+      transition:
+        background-color var(--t-slow) var(--ease),
+        border-color var(--t-slow) var(--ease),
+        color var(--t-slow) var(--ease),
+        fill var(--t-slow) var(--ease),
+        stroke var(--t-slow) var(--ease),
+        box-shadow var(--t-slow) var(--ease) !important;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

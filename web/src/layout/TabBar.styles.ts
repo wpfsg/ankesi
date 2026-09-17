@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { glass, hideWhileSearching } from '../styles/shared'
+import { glass } from '../styles/shared'
 
 export const TabNav = styled.nav`
   ${glass}
@@ -16,7 +16,6 @@ export const TabNav = styled.nav`
   border-right: 0;
   border-bottom: 0;
   border-radius: 0;
-  ${hideWhileSearching}
 
   a {
     display: flex;

@@ -57,7 +57,7 @@ Every push to `main` builds and publishes the app to GitHub Pages through
 src/
   App.tsx             routes: language layout, map route, content pages (lazy)
   entry-server.tsx    prerender entry (react-dom/static + styled-components SSR)
-  pages/              MapPage (the app), SpotsPage, SpotPage, HowItWorks, Faq, Pricing, Checkout, Reports, NotFound
+  pages/              MapPage (the app), SpotsPage, SpotPage, HowItWorks, Faq, Pricing, Checkout, Reports, Profile, NotFound
   layout/             SiteHeader (+ slide-over menu), Footer, TabBar, Breadcrumbs, RouteAnnouncer, MapShell
   data/spots.ts       108 spots across Georgia, ka/en names, species mix (coords approximate)
   data/species.ts     species with ka/en names, temperature ranges, seasons
@@ -68,6 +68,9 @@ src/
   lib/routes.ts       every URL is built here; lib/staticRoutes.ts lists what gets prerendered
   lib/head.tsx        per-route title, meta, canonical, hreflang, OG, JSON-LD
   lib/snapshot.ts     build-time score snapshot shared by prerender and hydration
+  lib/useSession.ts   the signed-in session, shared; loads supabase-js only when there is one
+  lib/useProfile.ts   the user's profile row, shared by the header, sheet and profile page
+  lib/useSignIn.ts    sign-in state and actions, shared by the map sheet and the profile page
   lib/format.ts       Tbilisi-time formatting, distance, drive-time estimate
   i18n/ka.ts          source language
   i18n/en.ts          translation, typed against ka
@@ -94,6 +97,7 @@ same slug; canonical and `hreflang` tags pair them.
 | `/:lang/pricing` | Free vs Premium, plans, comparison, billing FAQ | prerendered |
 | `/:lang/checkout/:plan` | Stub: launch-list email capture, `noindex` | prerendered |
 | `/:lang/reports` | Community reports feed | prerendered shell, client data |
+| `/:lang/account` | The account: sign-in when signed out; profile, catch log, saved spots and pond submissions when signed in | prerendered shell, `noindex` |
 | `*` | Localized 404, also served as `404.html` | prerendered |
 
 Region and species hubs (`/regions/:slug`, `/species/:slug`) are phase 2;
@@ -178,9 +182,14 @@ What the backend adds:
 - Sign in with a magic link (plus the 6-digit code from the same email once
   the custom template is live), or with Google. The first sign-in creates the
   account; browsing never needs one.
-- Profile: a display name shown on reports (editable in the account sheet),
-  join date, catch and report counts, and the user's pond submissions with
-  their moderation state.
+- A profile page at `/:lang/account`: display name shown on reports, join
+  date, catch and report counts, the full catch log with photos, saved spots,
+  pond submissions with their moderation state, and personal records. The
+  map keeps a compact account sheet for signing in and for the actions that
+  belong to the map; it links to the page rather than duplicating it.
+- Signed in, the header avatar opens an account menu (profile, sign out);
+  signed out the same button signs you in. Phones use the tab bar instead,
+  which goes straight to the account page.
 - Catch log with photo, weight, length, bait, method, note, private by default.
   The current score, factors, and water temperature are attached to every catch.
 - Community reports (dead … great) per spot, one per spot per 30 minutes.

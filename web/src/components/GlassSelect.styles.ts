@@ -13,7 +13,9 @@ export const Trigger = styled(Chip)`
 
   svg {
     flex: none;
-    transition: transform 160ms;
+    transition:
+      transform var(--t) var(--spring),
+      color var(--t-fast) var(--ease);
   }
 
   &[aria-expanded='true'] svg {

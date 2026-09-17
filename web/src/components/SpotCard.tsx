@@ -18,7 +18,11 @@ const CardLink = styled(Link)`
   border-radius: var(--radius-md);
   color: inherit;
   text-decoration: none;
-  transition: transform 160ms var(--spring), border-color 160ms, background 160ms;
+  transition:
+    transform var(--t) var(--spring),
+    border-color var(--t) var(--ease),
+    background var(--t) var(--ease),
+    box-shadow var(--t) var(--ease);
 
   &:hover {
     border-color: var(--chip-on-brd);

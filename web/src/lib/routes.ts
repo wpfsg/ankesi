@@ -6,7 +6,10 @@ import { isLang, type Lang } from '../i18n'
 export const paths = {
   map: (l: Lang) => `/${l}`,
   mapSpot: (l: Lang, id: string) => `/${l}?spot=${encodeURIComponent(id)}`,
-  account: (l: Lang) => `/${l}?account=1`,
+  account: (l: Lang) => `/${l}/account`,
+  /** The account sheet over the map, for actions that belong to the map
+   *  (submitting a pond, jumping to a saved spot). */
+  mapAccount: (l: Lang) => `/${l}?account=1`,
   spots: (l: Lang) => `/${l}/spots`,
   spot: (l: Lang, id: string) => `/${l}/spots/${id}`,
   /** Region hubs arrive in phase 2; until then the filtered catalog. */
@@ -24,7 +27,6 @@ export const NAV_ITEMS = [
   { key: 'map', to: paths.map },
   { key: 'spots', to: paths.spots },
   { key: 'how', to: paths.how },
-  { key: 'pricing', to: paths.pricing },
 ] as const
 
 export type NavKey = (typeof NAV_ITEMS)[number]['key']

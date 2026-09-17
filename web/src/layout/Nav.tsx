@@ -6,7 +6,7 @@ import { useLang } from './useLang'
 import { LangLinks, NavList } from './Nav.styles'
 
 interface NavProps {
-  /** Header shows the primary five; the drawer and footer show everything. */
+  /** Header shows the primary links; the drawer and footer show everything. */
   variant?: 'primary' | 'all'
   onNavigate?: () => void
 }
@@ -21,7 +21,11 @@ export function NavLinks({ variant = 'primary', onNavigate }: NavProps) {
     end: i.key === 'map',
   }))
   if (variant === 'all') {
-    items.push({ key: 'reports', to: paths.reports(lang) }, { key: 'faq', to: paths.faq(lang) })
+    items.push(
+      { key: 'pricing', to: paths.pricing(lang) },
+      { key: 'reports', to: paths.reports(lang) },
+      { key: 'faq', to: paths.faq(lang) },
+    )
   }
   return (
     <NavList>

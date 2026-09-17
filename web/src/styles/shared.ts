@@ -71,16 +71,6 @@ export const bandVar = css`
   }
 `
 
-/** Fades a fixed element out while the header search results are open.
- *  Header sets data-searching on <html>. */
-export const hideWhileSearching = css`
-  html[data-searching='true'] & {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 120ms;
-  }
-`
-
 /** Thin, rounded overlay scrollbar that floats inside rounded surfaces. */
 export const thinScrollbar = css`
   scrollbar-width: thin;

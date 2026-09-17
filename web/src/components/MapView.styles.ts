@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { bandVar, tabular, hideWhileSearching } from '../styles/shared'
+import { bandVar, tabular } from '../styles/shared'
 
 /** Full-screen map container. Marker bubbles are created imperatively for
  *  MapLibre (see makeBubble), so their rules are nested here by class. */
@@ -141,7 +141,6 @@ export const Controls = styled.div<{ $shift?: boolean }>`
   flex-direction: row;
   align-items: center;
   gap: 8px;
-  ${hideWhileSearching}
 
   @media (min-width: 720px) {
     right: 16px;

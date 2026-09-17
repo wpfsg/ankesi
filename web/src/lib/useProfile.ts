@@ -1,12 +1,12 @@
 import { useEffect, useSyncExternalStore } from 'react'
 import type { User } from '@supabase/supabase-js'
 import type { Profile } from '../types'
-import { fetchProfile, saveProfile } from './db'
 import { displayNameOf } from './displayName'
 
 /**
- * The signed-in user's profile row, shared by the header and the account
- * sheet so a saved name shows everywhere at once. Loaded once per user.
+ * The signed-in user's profile row, shared by the header, the account sheet
+ * and the profile page so a saved name shows everywhere at once. Loaded
+ * once per user; the database module is imported on demand.
  */
 
 interface ProfileState {
@@ -27,9 +27,15 @@ function set(next: ProfileState) {
 function load(user: User) {
   if (state.userId === user.id) return
   set({ userId: user.id, profile: null, ready: false })
-  fetchProfile(user.id)
-    .then((profile) => state.userId === user.id && set({ userId: user.id, profile, ready: true }))
-    .catch(() => state.userId === user.id && set({ ...state, ready: true }))
+  void (async () => {
+    try {
+      const { fetchProfile } = await import('./db')
+      const profile = await fetchProfile(user.id)
+      if (state.userId === user.id) set({ userId: user.id, profile, ready: true })
+    } catch {
+      if (state.userId === user.id) set({ ...state, ready: true })
+    }
+  })()
 }
 
 function subscribe(cb: () => void) {
@@ -52,7 +58,11 @@ export function useProfile(user: User | null): ProfileView {
     else if (state.userId) set(EMPTY)
   }, [user])
 
-  const s = useSyncExternalStore(subscribe, () => state, () => EMPTY)
+  const s = useSyncExternalStore(
+    subscribe,
+    () => state,
+    () => EMPTY,
+  )
   const mine = user !== null && s.userId === user.id
   const profile = mine ? s.profile : null
   return {
@@ -63,6 +73,7 @@ export function useProfile(user: User | null): ProfileView {
 }
 
 export async function updateDisplayName(user: User, name: string): Promise<void> {
+  const { saveProfile } = await import('./db')
   const profile = await saveProfile(user.id, name)
   if (state.userId === user.id) set({ userId: user.id, profile, ready: true })
 }

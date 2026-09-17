@@ -1,19 +1,20 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { User } from '@supabase/supabase-js'
 import type { Spot, SpotResult } from '../types'
 import { Link } from 'react-router'
 import type { Lang } from '../i18n'
 import { bandOf } from '../lib/scoring'
-import { fmtTime } from '../lib/format'
 import { paths } from '../lib/routes'
 import { displayNameOf, initialOf } from '../lib/displayName'
+import { signOut } from '../lib/useSession'
 import { MiniBubble } from '../styles/shared'
 import { LangSwitch, NavLinks } from '../layout/Nav'
 import { ThemeToggle } from './ThemeToggle'
 import {
   AccountBtn,
   AccountLabel,
+  AccountWrap,
   Avatar,
   Brand,
   BrandCol,
@@ -22,12 +23,15 @@ import {
   HeaderResults,
   HeaderRoot,
   HeaderRow,
+  Menu,
+  MenuHead,
+  MenuItem,
   NavSlot,
-  PremiumLink,
-  Updated,
   PillIcon,
   Result,
   ResultName,
+  ResultsHead,
+  ResultsList,
   Search,
 } from './Header.styles'
 
@@ -38,15 +42,16 @@ interface Props {
   /** Saved profile name; falls back to the auth provider's name or email. */
   displayName?: string
   onSelect: (id: string) => void
+  /** Signed out: what the account button does — the map opens its sheet,
+   *  content pages go to the account page. Signed in, the button opens the
+   *  account menu instead. */
   onAccount: () => void
-  /** When the weather was last fetched; shown next to the controls. */
-  updatedAt?: Date
 }
 
-/** Fixed glass header: brand, links, search, theme, language, Premium,
- *  account. Used by the map and by every content page. Publishes its height
- *  as --header-h so the bottom sheet, pills and page content sit below it. */
-export function Header({ spots, results, user, displayName, onSelect, onAccount, updatedAt }: Props) {
+/** Fixed glass header: brand, links, search, theme, language and account.
+ *  Used by the map and by every content page. Publishes its height as
+ *  --header-h so the bottom sheet, pills and page content sit below it. */
+export function Header({ spots, results, user, displayName, onSelect, onAccount }: Props) {
   const { t, i18n } = useTranslation()
   const lang = (i18n.language === 'en' ? 'en' : 'ka') as Lang
   const [query, setQuery] = useState('')
@@ -63,9 +68,49 @@ export function Header({ spots, results, user, displayName, onSelect, onAccount,
     return () => ro.disconnect()
   }, [])
 
+  // Account menu: opens on the avatar, closes on Escape, on a click outside
+  // and on picking an item.
+  const [menuOpen, setMenuOpen] = useState(false)
+  const accountWrap = useRef<HTMLDivElement>(null)
+  const accountBtn = useRef<HTMLButtonElement>(null)
+  const menu = useRef<HTMLDivElement>(null)
+
+  const closeMenu = useCallback(() => setMenuOpen(false), [])
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const onPointer = (e: PointerEvent) => {
+      const target = e.target as Node
+      if (accountWrap.current?.contains(target) || menu.current?.contains(target)) return
+      setMenuOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointer)
+    // Opening with the keyboard should land on the first item.
+    menu.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus()
+    return () => document.removeEventListener('pointerdown', onPointer)
+  }, [menuOpen])
+
+  const onMenuKeys = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setMenuOpen(false)
+      accountBtn.current?.focus()
+      return
+    }
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
+    e.preventDefault()
+    const items = [...(menu.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [])]
+    const next = items.indexOf(document.activeElement as HTMLElement) + (e.key === 'ArrowDown' ? 1 : -1)
+    items[(next + items.length) % items.length]?.focus()
+  }
+
+  const q = query.trim().toLowerCase()
+
+  const nameOf = useCallback((s: Spot) => (lang === 'ka' ? s.nameKa : s.nameEn), [lang])
+
+  // Empty field: every spot, A→Z, so the dropdown is a browsable list.
+  // Typing filters it.
   const matches = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return []
+    if (!q) return [...spots].sort((a, b) => nameOf(a).localeCompare(nameOf(b), lang))
     // Rank: name starts with the query, then any word starts with it, then substring.
     const rank = (s: Spot) => {
       const names = [s.nameKa.toLowerCase(), s.nameEn.toLowerCase()]
@@ -84,21 +129,11 @@ export function Header({ spots, results, user, displayName, onSelect, onAccount,
           type.includes(q)
         )
       })
-      .sort((a, b) => rank(a) - rank(b))
-      .slice(0, 8)
-  }, [query, spots, t])
+      .sort((a, b) => rank(a) - rank(b) || nameOf(a).localeCompare(nameOf(b), lang))
+  }, [q, spots, t, lang, nameOf])
 
-  const showResults = focused && query.trim().length > 0
-
-  // Hide the floating pills while results are open so they don't show
-  // through the glass.
-  useEffect(() => {
-    if (showResults) document.documentElement.dataset.searching = 'true'
-    else delete document.documentElement.dataset.searching
-    return () => {
-      delete document.documentElement.dataset.searching
-    }
-  }, [showResults])
+  // Opens on focus, not just on a query: clicking the field shows the spots.
+  const showResults = focused
 
   // Starts wide so the prerendered markup matches; narrows after mount.
   const [narrow, setNarrow] = useState(false)
@@ -112,7 +147,8 @@ export function Header({ spots, results, user, displayName, onSelect, onAccount,
   const placeholder = narrow ? t('search.placeholderShort') : t('search.placeholder')
 
   return (
-    <HeaderRoot ref={ref}>
+    <>
+      <HeaderRoot ref={ref}>
       <HeaderRow>
         <BrandCol>
           <Brand as={Link} to={paths.map(lang)} aria-label={t('nav.home')}>
@@ -140,6 +176,10 @@ export function Header({ spots, results, user, displayName, onSelect, onAccount,
             onBlur={() => setTimeout(() => setFocused(false), 120)}
             placeholder={placeholder}
             aria-label={t('search.placeholder')}
+            role="combobox"
+            aria-expanded={showResults}
+            aria-controls="header-search-results"
+            aria-autocomplete="list"
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
@@ -147,61 +187,105 @@ export function Header({ spots, results, user, displayName, onSelect, onAccount,
         </Search>
 
         <HeaderActions>
-        {updatedAt && <Updated>{t('status.updated', { time: fmtTime(updatedAt, lang) })}</Updated>}
         <ThemeToggle />
 
         <LangSwitch />
 
-        <PremiumLink to={paths.pricing(lang)}>{t('nav.premium')}</PremiumLink>
-
-        <AccountBtn type="button" onClick={onAccount} aria-label={t('account.open')}>
-          {user ? (
-            <Avatar>{initialOf(displayName || displayNameOf(user))}</Avatar>
-          ) : (
-            <>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                <circle cx="12" cy="8" r="4" />
-                <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
-              </svg>
-              <AccountLabel>{t('account.signIn')}</AccountLabel>
-            </>
-          )}
-        </AccountBtn>
+        <AccountWrap ref={accountWrap}>
+          <AccountBtn
+            ref={accountBtn}
+            type="button"
+            onClick={() => (user ? setMenuOpen((open) => !open) : onAccount())}
+            aria-label={t('account.open')}
+            aria-haspopup={user ? 'menu' : undefined}
+            aria-expanded={user ? menuOpen : undefined}
+          >
+            {user ? (
+              <Avatar>{initialOf(displayName || displayNameOf(user))}</Avatar>
+            ) : (
+              <>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
+                </svg>
+                <AccountLabel>{t('account.signIn')}</AccountLabel>
+              </>
+            )}
+          </AccountBtn>
+        </AccountWrap>
         </HeaderActions>
       </HeaderRow>
+      </HeaderRoot>
+
+      {menuOpen && user && (
+        <Menu ref={menu} role="menu" aria-label={t('account.title')} onKeyDown={onMenuKeys}>
+          <MenuHead>
+            <strong>{displayName || displayNameOf(user)}</strong>
+            <small>{user.email}</small>
+          </MenuHead>
+          <MenuItem as={Link} role="menuitem" to={paths.account(lang)} onClick={closeMenu}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden="true">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
+            </svg>
+            {t('account.profile')}
+          </MenuItem>
+          <MenuItem
+            as="button"
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              closeMenu()
+              void signOut()
+            }}
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden="true">
+              <path d="M15 17l5-5-5-5M20 12H9M12 3H5v18h7" />
+            </svg>
+            {t('profile.signOut')}
+          </MenuItem>
+        </Menu>
+      )}
 
       {showResults && (
-        <HeaderResults role="listbox">
-          {matches.length === 0 && <Result as="div" $muted>{t('search.noResults')}</Result>}
-          {matches.map((s) => {
-            const score = results[s.id]?.hours[0]?.score
-            return (
-              <Result
-                key={s.id}
-                type="button"
-                role="option"
-                aria-selected={false}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  onSelect(s.id)
-                  setQuery('')
-                  setFocused(false)
-                }}
-              >
-                <MiniBubble data-band={bandOf(score)}>
-                  {score ?? '·'}
-                </MiniBubble>
-                <ResultName>
-                  {lang === 'ka' ? s.nameKa : s.nameEn}
-                  <small>
-                    {t(`type.${s.type}`)} · {t(`region.${s.region}`)}
-                  </small>
-                </ResultName>
-              </Result>
-            )
-          })}
+        // Keep the field focused when the panel or its scrollbar is grabbed.
+        <HeaderResults onMouseDown={(e) => e.preventDefault()}>
+          <ResultsHead>
+            {q ? t('search.matches') : t('search.all')}
+            <span>{matches.length}</span>
+          </ResultsHead>
+          <ResultsList id="header-search-results" role="listbox" aria-label={q ? t('search.matches') : t('search.all')}>
+            {matches.length === 0 && <Result as="div" $muted>{t('search.noResults')}</Result>}
+            {matches.map((s) => {
+              const score = results[s.id]?.hours[0]?.score
+              return (
+                <Result
+                  key={s.id}
+                  type="button"
+                  role="option"
+                  aria-selected={false}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    onSelect(s.id)
+                    setQuery('')
+                    setFocused(false)
+                  }}
+                >
+                  <MiniBubble data-band={bandOf(score)}>
+                    {score ?? '·'}
+                  </MiniBubble>
+                  <ResultName>
+                    {nameOf(s)}
+                    <small>
+                      {t(`type.${s.type}`)} · {t(`region.${s.region}`)}
+                    </small>
+                  </ResultName>
+                </Result>
+              )
+            })}
+          </ResultsList>
         </HeaderResults>
       )}
-    </HeaderRoot>
+    </>
   )
 }

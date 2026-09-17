@@ -1,5 +1,4 @@
 import styled from 'styled-components'
-import { hideWhileSearching } from './styles/shared'
 
 /* top layer (below the header) */
 
@@ -30,7 +29,6 @@ export const TopLayer = styled.div`
     align-items: center;
   }
 
-  ${hideWhileSearching}
 `
 
 /* top row: trip pill + account */

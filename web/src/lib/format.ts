@@ -52,13 +52,12 @@ export function fmtDate(d: Date, lang: string): string {
   }).format(d)
 }
 
-export function fmtDay(d: Date, lang: string): string {
-  return new Intl.DateTimeFormat(intlLocale(lang), {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: TZ,
-  }).format(d)
+/** Calendar date in Tbilisi time, e.g. "2 ივნისი 2026" / "2 June 2026".
+ *  The month name comes from i18n rather than Intl: Chrome ships no
+ *  Georgian date data, so Intl renders English months in the Georgian UI. */
+export function fmtDay(d: Date, t: (key: string) => string): string {
+  const local = new Date(d.getTime() + TBILISI_OFFSET_MS)
+  return `${local.getUTCDate()} ${t(`months.${local.getUTCMonth() + 1}`)} ${local.getUTCFullYear()}`
 }
 
 /** Calendar parts in Tbilisi local time without Intl overhead. */

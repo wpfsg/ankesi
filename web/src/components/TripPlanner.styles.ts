@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { glass, hideWhileSearching, Panel, PanelFooter, PanelScroll, Tabs, tabular } from '../styles/shared'
+import { glass, Panel, PanelFooter, PanelScroll, Tabs, tabular } from '../styles/shared'
 
 /* Launcher ---------------------------------------------------------------- */
 
@@ -21,7 +21,6 @@ export const Launcher = styled.button`
   font-weight: 600;
   color: var(--fg);
   white-space: nowrap;
-  ${hideWhileSearching}
 
   @media (min-width: 720px) {
     bottom: auto;
@@ -55,7 +54,6 @@ export const PlannerPanel = styled(Panel)`
   right: 12px;
   top: calc(var(--header-h, 72px) + 8px);
   bottom: calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h, 0px) + 12px);
-  ${hideWhileSearching}
 
   @media (min-width: 720px) {
     right: auto;
