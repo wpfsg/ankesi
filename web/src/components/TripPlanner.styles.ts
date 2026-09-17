@@ -9,7 +9,7 @@ export const Launcher = styled.button`
   z-index: 14;
   left: 12px;
   /* clear the map attribution line */
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 48px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h, 0px) + 12px);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -54,7 +54,7 @@ export const PlannerPanel = styled(Panel)`
   left: 12px;
   right: 12px;
   top: calc(var(--header-h, 72px) + 8px);
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h, 0px) + 12px);
   ${hideWhileSearching}
 
   @media (min-width: 720px) {

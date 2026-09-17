@@ -1,9 +1,9 @@
 import styled, { css } from 'styled-components'
-import { hideWhileSearching } from '../styles/shared'
+import { hideWhileSearching, bandVar, tabular } from '../styles/shared'
 
-/* Phones: compact strip under the header. Desktop: card bottom-left that
-   slides right of the planner when it is open. */
-export const Legend = styled.div<{ $shift?: boolean; $hideOnPhone?: boolean }>`
+/* Phones: compact strip under the header. Desktop: card bottom-left.
+   Hidden entirely while the trip planner is open. */
+export const Legend = styled.div<{ $hidden?: boolean; $hideOnPhone?: boolean }>`
   position: fixed;
   z-index: 13;
   left: 12px;
@@ -15,6 +15,11 @@ export const Legend = styled.div<{ $shift?: boolean; $hideOnPhone?: boolean }>`
   border-radius: var(--r-row);
   box-shadow: var(--sh-ctl);
   ${hideWhileSearching}
+  ${(p) =>
+    p.$hidden &&
+    css`
+      display: none;
+    `}
   ${(p) =>
     p.$hideOnPhone &&
     css`
@@ -30,26 +35,61 @@ export const Legend = styled.div<{ $shift?: boolean; $hideOnPhone?: boolean }>`
     bottom: 16px;
     min-width: 300px;
     padding: 10px 12px;
-    transition: left 220ms var(--spring);
-    ${(p) =>
-      p.$shift &&
-      css`
-        left: 416px;
-      `}
   }
 `
 
 export const LegendTitle = styled.b`
-  display: block;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
   font-size: 12px;
   font-weight: 650;
   color: var(--fg);
 `
 
+/** Selected spot's score, shown next to the title in its band colour. */
+export const LegendScore = styled.span`
+  ${bandVar}
+  ${tabular}
+  font-weight: 700;
+  color: var(--band);
+`
+
+/* Leaves room above the ramp for the pointer. */
+export const RampWrap = styled.div`
+  position: relative;
+  margin: 10px 0 4px;
+`
+
+/** Downward arrow above the ramp marking the selected spot's score. */
+export const RampPointer = styled.span`
+  position: absolute;
+  top: -7px;
+  left: var(--pct, 0%);
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--fg);
+  transition: left 260ms var(--spring);
+  pointer-events: none;
+
+  /* thin tick down through the ramp so the position is exact */
+  &::after {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: 0;
+    width: 2px;
+    height: 9px;
+    background: var(--fg);
+  }
+`
+
 export const Ramp = styled.div`
   height: 8px;
   border-radius: 999px;
-  margin: 7px 0 4px;
   background: linear-gradient(
     90deg,
     var(--band-dead),

@@ -2,25 +2,29 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { User } from '@supabase/supabase-js'
 import type { Spot, SpotResult } from '../types'
-import { LANGS, setLang, type Lang } from '../i18n'
+import { Link } from 'react-router'
+import type { Lang } from '../i18n'
 import { bandOf } from '../lib/scoring'
 import { fmtTime } from '../lib/format'
-import { displayNameOf } from '../lib/useSession'
-import { toggleTheme, useTheme } from '../lib/theme'
+import { paths } from '../lib/routes'
+import { displayNameOf } from '../lib/displayName'
 import { MiniBubble } from '../styles/shared'
+import { LangSwitch, NavLinks } from '../layout/Nav'
+import { ThemeToggle } from './ThemeToggle'
 import {
   AccountBtn,
   AccountLabel,
   Avatar,
   Brand,
+  BrandCol,
   BrandName,
   HeaderActions,
   HeaderResults,
   HeaderRoot,
   HeaderRow,
-  IconToggle,
+  NavSlot,
+  PremiumLink,
   Updated,
-  LangChip,
   PillIcon,
   Result,
   ResultName,
@@ -37,12 +41,12 @@ interface Props {
   updatedAt?: Date
 }
 
-/** Fixed glass header: brand, search, theme, language, account. Publishes
- *  its height as --header-h so the bottom sheet and pills sit below it. */
+/** Fixed glass header: brand, links, search, theme, language, Premium,
+ *  account. Used by the map and by every content page. Publishes its height
+ *  as --header-h so the bottom sheet, pills and page content sit below it. */
 export function Header({ spots, results, user, onSelect, onAccount, updatedAt }: Props) {
   const { t, i18n } = useTranslation()
   const lang = (i18n.language === 'en' ? 'en' : 'ka') as Lang
-  const theme = useTheme()
   const [query, setQuery] = useState('')
   const [focused, setFocused] = useState(false)
   const ref = useRef<HTMLElement>(null)
@@ -94,9 +98,11 @@ export function Header({ spots, results, user, onSelect, onAccount, updatedAt }:
     }
   }, [showResults])
 
-  const [narrow, setNarrow] = useState(() => window.matchMedia('(max-width: 480px)').matches)
+  // Starts wide so the prerendered markup matches; narrows after mount.
+  const [narrow, setNarrow] = useState(false)
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 480px)')
+    setNarrow(mq.matches)
     const on = (e: MediaQueryListEvent) => setNarrow(e.matches)
     mq.addEventListener('change', on)
     return () => mq.removeEventListener('change', on)
@@ -106,14 +112,19 @@ export function Header({ spots, results, user, onSelect, onAccount, updatedAt }:
   return (
     <HeaderRoot ref={ref}>
       <HeaderRow>
-        <Brand aria-label={t('app.title')}>
-          <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true">
-            <circle cx="32" cy="32" r="30" fill="var(--accent)" />
-            <path d="M17 34c7-11 22-11 29 0-7 11-22 11-29 0z" fill="var(--accent-fg)" />
-            <circle cx="39" cy="33" r="2.4" fill="var(--accent)" />
-          </svg>
-          <BrandName>{t('app.title')}</BrandName>
-        </Brand>
+        <BrandCol>
+          <Brand as={Link} to={paths.map(lang)} aria-label={t('nav.home')}>
+            <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true">
+              <circle cx="32" cy="32" r="30" fill="var(--accent)" />
+              <path d="M17 34c7-11 22-11 29 0-7 11-22 11-29 0z" fill="var(--accent-fg)" />
+              <circle cx="39" cy="33" r="2.4" fill="var(--accent)" />
+            </svg>
+            <BrandName>{t('app.title')}</BrandName>
+          </Brand>
+          <NavSlot aria-label={t('nav.primary')}>
+            <NavLinks />
+          </NavSlot>
+        </BrandCol>
 
         <Search>
           <PillIcon viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -135,31 +146,11 @@ export function Header({ spots, results, user, onSelect, onAccount, updatedAt }:
 
         <HeaderActions>
         {updatedAt && <Updated>{t('status.updated', { time: fmtTime(updatedAt, lang) })}</Updated>}
-        <IconToggle
-          type="button"
-          onClick={() => toggleTheme()}
-          aria-label={theme === 'dark' ? t('theme.light') : t('theme.dark')}
-          title={t('theme.toggle')}
-        >
-          {theme === 'dark' ? (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="4" />
-              <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-            </svg>
-          ) : (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
-            </svg>
-          )}
-        </IconToggle>
+        <ThemeToggle />
 
-        <LangChip role="group" aria-label="language">
-          {LANGS.map((l) => (
-            <button key={l} type="button" aria-pressed={lang === l} onClick={() => setLang(l)}>
-              {t(`lang.${l}`)}
-            </button>
-          ))}
-        </LangChip>
+        <LangSwitch />
+
+        <PremiumLink to={paths.pricing(lang)}>{t('nav.premium')}</PremiumLink>
 
         <AccountBtn type="button" onClick={onAccount} aria-label={t('account.open')}>
           {user ? (

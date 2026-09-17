@@ -93,9 +93,10 @@ export const GlobalStyle = createGlobalStyle`
     --sh: 0 10px 34px rgba(0, 0, 0, 0.5);
     --sh-ctl: 0 4px 14px rgba(0, 0, 0, 0.4);
 
-    --pri: #2f9e6a;
+    /* Deep enough that white text passes AA (4.9:1) on the dark theme too. */
+    --pri: #1f7f50;
     --pri-fg: #ffffff;
-    --pri-shadow: 0 2px 8px rgba(47, 158, 106, 0.35);
+    --pri-shadow: 0 2px 8px rgba(31, 127, 80, 0.4);
     --ring-track: #2a3038;
     --best-bg: linear-gradient(135deg, rgba(46, 125, 79, 0.22), rgba(46, 125, 79, 0.12));
     --best-brd: rgba(46, 125, 79, 0.45);
@@ -135,11 +136,34 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   html,
-  body,
-  #root {
-    height: 100%;
+  body {
     margin: 0;
+    min-height: 100%;
+  }
+
+  #root {
+    min-height: 100%;
+  }
+
+  /* On phones a tab bar takes --tabbar-h at the bottom of every route. The
+     map is a fixed, full-screen surface where nothing scrolls behind it;
+     content routes scroll normally. App.tsx sets data-app on <html>. */
+  :root {
+    --tabbar-h: 0px;
+  }
+
+  :root[data-app='map'],
+  :root[data-app='map'] body,
+  :root[data-app='map'] #root {
+    height: 100%;
     overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  @media (max-width: 719.98px) {
+    :root {
+      --tabbar-h: 58px;
+    }
   }
 
   body {
@@ -150,7 +174,13 @@ export const GlobalStyle = createGlobalStyle`
     line-height: 1.45;
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
-    overscroll-behavior: none;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
   }
 
   html[lang='ka'] body {

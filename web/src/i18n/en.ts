@@ -302,6 +302,464 @@ const en: Translation = {
     pending: 'Submitted. The pond appears on the map after moderation.',
     locationHint: 'Stand on the shore and tap "My location", or type the coordinates.',
   },
+  /* ---------------------------------------------------------------------
+     Site chrome, content pages and SEO copy.
+     -------------------------------------------------------------------- */
+
+  nav: {
+    map: 'Map',
+    spots: 'Spots',
+    how: 'How it works',
+    pricing: 'Pricing',
+    faq: 'FAQ',
+    reports: 'Reports',
+    account: 'Account',
+    premium: 'Premium',
+    menu: 'Menu',
+    close: 'Close',
+    language: 'Language',
+    skip: 'Skip to main content',
+    home: 'Ankesi — home',
+    primary: 'Main navigation',
+    tabs: 'Quick navigation',
+    breadcrumbs: 'You are here',
+  },
+
+  a11y: {
+    navigated: 'Page: {{title}}',
+  },
+
+  footer: {
+    product: 'Product',
+    byRegion: 'Spots by region',
+    learn: 'Learn',
+    legal: 'Sources & rules',
+    factors: 'The 9 factors and weights',
+    dataSources: 'Data sources',
+    regulations: 'Fishing rules and closed seasons',
+    disclaimer: 'Where is fishing allowed?',
+    ministry: 'Ministry of Environment',
+    attribution:
+      'Map: © OpenStreetMap contributors, OpenFreeMap. Weather and sea: Open-Meteo. Satellite imagery: Esri.',
+    rights: 'Every score is a forecast, not a guarantee.',
+  },
+
+  seo: {
+    map: {
+      description:
+        'Live fish-activity scores for 100+ fishing spots across Georgia: lakes, reservoirs, rivers and the Black Sea coast. Built from weather, pressure, water temperature and moon data, corrected by anglers’ reports.',
+    },
+    spots: {
+      title: 'Fishing spots in Georgia',
+      titleRegion: 'Fishing spots · {{region}}',
+      titleSpecies: 'Fishing spots · {{species}}',
+      description:
+        '{{count}} fishing spots with today’s score: lakes, reservoirs, rivers and the sea coast. Filter by region, water type and species.',
+    },
+    spot: {
+      title: '{{name}} — fishing forecast',
+      description:
+        '{{name}} ({{type}}, {{region}}): fish activity score today {{score}}/100, best hours, species ({{species}}), access and regulations.',
+    },
+    how: {
+      title: 'How the fishing score is calculated',
+      description:
+        'The 9 factors, their weights, data sources, confidence levels and the model’s limits: Ankesi’s score explained in the open.',
+    },
+    faq: {
+      title: 'Frequently asked questions',
+      description:
+        'What the 0–100 score means, why it changes, where the data comes from, where fishing is allowed, how reports work and what Premium adds.',
+    },
+    pricing: {
+      title: 'Pricing — free and Premium',
+      description:
+        'The map and today’s score are always free. Premium adds a 7-day forecast, alerts and factor history. Prices in GEL, cancel anytime.',
+    },
+    reports: {
+      title: 'Anglers’ reports',
+      description: 'The latest reports from fishing spots across Georgia: where and in what conditions fish were actually active.',
+    },
+  },
+
+  spots: {
+    eyebrow: 'Catalog',
+    title: 'Fishing spots in Georgia',
+    titleRegion: 'Fishing spots · {{region}}',
+    titleSpecies: 'Fishing spots · {{species}}',
+    lead: '{{count}} spots with today’s score. Pick a region, water type or species, then open the spot page or the map.',
+    filters: {
+      title: 'Filters',
+      search: 'Search by name…',
+      region: 'Region',
+      type: 'Water type',
+      species: 'Species',
+      sort: 'Sort',
+      allRegions: 'All regions',
+      allTypes: 'All types',
+      allSpecies: 'All species',
+      sortScore: 'By score',
+      sortName: 'By name',
+      clear: 'Clear filters',
+    },
+    count: '{{count}} spots',
+    updatedLive: 'updated {{time}}',
+    updatedSnapshot: 'scores as of {{time}}',
+    empty: 'Nothing matches these filters.',
+    infoOnly: 'info only',
+    best: 'Best {{start}}–{{end}} · {{avg}}',
+    openMap: 'Open the map',
+  },
+
+  spot: {
+    lead: '{{type}} in {{region}}. Main species: {{species}}.',
+    leadSeason: 'Season: {{season}}.',
+    updatedLive: 'Live data · updated {{time}}',
+    updatedSnapshot: 'Score as of {{time}} · live data loading',
+    noData: 'No score yet.',
+    days3to7: 'Days 3–7',
+    premiumTeaser: '7-day forecast with Premium',
+    unlock: 'Unlock',
+    whenTitle: 'When to go',
+    season: 'Season',
+    seasonNone: 'Season not established',
+    timeOfDay: 'Best time of day',
+    tod: {
+      golden: 'Dawn and dusk',
+      night: 'Evening and night — nocturnal species',
+      mixed: 'Dawn, dusk and the night hours',
+    },
+    waterTemp: '~{{temp}} °C ({{kind}})',
+    protected: 'protected',
+    speciesTemp: 'Preferred water temperature {{min}}–{{max}} °C',
+    regulationsMore: 'More on closed seasons and rules',
+    noReports: 'No reports from this spot in the last 7 days. If you are there, share how it is going — it sharpens the score for everyone.',
+    addReport: 'Add a report',
+    nearby: 'Nearby spots',
+    nearbyKm: '{{km}} km',
+    moreInRegion: 'All spots · {{region}}',
+    openOnMap: 'Open on the map',
+    mapAlt: '{{name}} on the map',
+    alertTitle: 'Tell me when this spot goes above 80',
+    alertHint: 'You will get an email about the best window. Alerts are part of Premium; for now you join the list.',
+    alertEmail: 'Your email',
+    alertSend: 'Add me',
+    alertSent: 'Added. You will be the first to know when alerts launch.',
+    howLink: 'How is this score calculated?',
+  },
+
+  how: {
+    eyebrow: 'Methodology',
+    title: 'How the score is calculated',
+    lead: 'For every spot, every hour, we compute a 0–100 score: how active fish are likely to be. Here is what the number is made of, where the data comes from and where the model falls short.',
+    score: {
+      title: 'What 0–100 means',
+      p1: 'The score is not a promise of a catch. It estimates how favourable conditions are for the species usually caught at this spot. 82 and above means nearly every factor lines up; below 35 means several important factors work against you.',
+      p2: 'The score is hourly. The same spot can be 78 at 6 a.m. and 41 at noon. That is why we show a 48-hour strip and a “best window”: the three consecutive hours with the highest average.',
+    },
+    factors: {
+      title: 'The 9 factors',
+      lead: 'Each factor has a weight (they sum to 100) and a value from 0 to 1 that says how good the current state is. The score is the sum of weight × value.',
+      items: {
+        timeOfDay:
+          'Fish are most active around sunrise and sunset. Sun times are computed exactly for the spot’s coordinates. Nocturnal species such as wels catfish also lift the night hours.',
+        pressureTrend:
+          'Pressure change over the last 6 hours. Steady or slowly falling pressure is good; a sharp jump in either direction makes fish passive.',
+        waterTemp:
+          'Every species has a preferred temperature range. We measure how close the water is to the comfort zone of this spot’s species. In lakes and rivers the temperature is estimated from the last 7 days of air temperature; at sea it is measured.',
+        wind: 'A light 5–15 km/h wind ripples the surface and encourages feeding. Above 30 km/h fishing gets hard and the score drops sharply.',
+        light: 'An overcast sky is better than bright sun during the day. At night this factor is neutral.',
+        water:
+          'Rain over the last 48 hours raises rivers and muddies the water. At sea spots wave height is used instead: under 0.5 m is excellent, over 1.2 m is poor.',
+        pressureLevel: '1010–1020 hPa counts as normal. The further away, the more the score slowly loses.',
+        moon: 'New and full moon count slightly positive, quarters neutral. It is a weak factor and its weight is small accordingly.',
+        season: 'If the current month is in season for this spot’s species, the factor is at its maximum; off season it is low but not zero.',
+        waves: 'Waves',
+      },
+      rain: 'On top of that: if more than 5 mm of rain fell in the last 3 hours, the final score is reduced by 40%.',
+    },
+    weights: {
+      title: 'Weights',
+      p1: 'Current model: {{version}}. The weights are hand-set from experienced anglers’ advice and the literature, not yet from data.',
+      p2: 'That is a deliberate compromise: we do not yet have enough catch history. Every report and every catch you log is stored with the weather of that moment. That is the dataset the weights will be refitted on.',
+    },
+    sources: {
+      title: 'Data sources',
+      colData: 'Data',
+      colSource: 'Source',
+      colKind: 'Kind',
+      rows: {
+        weather: {
+          data: 'Temperature, pressure, wind, cloud cover, precipitation — hourly, 7 days back and 3 ahead',
+          source: 'Open-Meteo',
+          kind: 'measured / forecast',
+        },
+        marine: { data: 'Wave height, sea surface temperature', source: 'Open-Meteo Marine', kind: 'measured / forecast' },
+        astro: { data: 'Sunrise, sunset, moon phase', source: 'SunCalc, astronomical calculation', kind: 'exact' },
+        map: { data: 'Map and water bodies', source: 'OpenStreetMap, OpenFreeMap', kind: 'real' },
+        waterTemp: {
+          data: 'Water temperature in lakes and rivers',
+          source: 'Our model: 7-day air temperature × depth class',
+          kind: 'estimate',
+        },
+        waterLevel: { data: 'Water level and clarity', source: 'Our model: 48 h rainfall', kind: 'estimate' },
+        reports: { data: 'Conditions on site', source: 'Anglers’ reports', kind: 'observation' },
+      },
+      update: 'Weather data refreshes once an hour. Every estimated quantity is marked “estimated” in the app.',
+    },
+    confidence: {
+      title: 'Confidence',
+      p1: 'Every score carries a confidence level: how much we trust the number itself.',
+      low: 'Data is older than 3 hours or the provider refused a refresh.',
+      medium: 'Fresh weather data, but no confirmation from anglers.',
+      high: 'At least three reports from this spot in the last 7 days.',
+    },
+    community: {
+      title: 'Anglers’ correction',
+      p1: 'The only ground truth the model has is anglers’ own observations. Every report (from “very poor” to “excellent”) shifts the spot’s score by up to ±15 points.',
+      p2: 'Older reports lose half their weight every 48 hours: yesterday’s observation matters less today and hardly at all tomorrow. Three flags hide a report.',
+    },
+    limits: {
+      title: 'What the model cannot see',
+      l1: 'Water temperature and level in lakes and rivers are estimated, not measured, until gauges are connected.',
+      l2: 'The model does not know local factors: releases from reservoirs, stocking, boat traffic, poaching.',
+      l3: 'The weights have not yet been refitted on real catches.',
+      l4: 'Closed seasons and size limits are not yet verified with the Ministry. Check before you fish.',
+    },
+    cta: { map: 'Open the map', faq: 'FAQ' },
+  },
+
+  faq: {
+    eyebrow: 'Help',
+    title: 'Frequently asked questions',
+    lead: 'About the score, the data, the rules and the subscription. If you cannot find an answer, write to us.',
+    groupsLabel: 'Topics',
+    groups: {
+      product: 'Product',
+      forecast: 'Forecast and accuracy',
+      fishing: 'Fishing and rules',
+      account: 'Account and data',
+      billing: 'Premium and billing',
+    },
+    search: 'Search questions…',
+    noResults: 'Nothing found.',
+    link: 'Link to this question',
+    stillTitle: 'Still have a question?',
+    stillLead: 'Write to us and we answer within a day or two. If we missed a spot or a species, tell us that too.',
+    stillMap: 'Back to the map',
+    contact: 'Contact us',
+    contactGithub: 'Write to us on GitHub',
+    items: {
+      'what-is-score': {
+        q: 'What does the 0–100 score mean?',
+        a: 'The score says how favourable conditions are for fishing at this spot, this hour. 82 and above is excellent, 68–81 good, 52–67 fair, 35–51 slow, below 35 very poor. It is not a promise of a catch: it sums up weather, pressure, water temperature, time of day and other factors.',
+      },
+      'how-to-read-map': {
+        q: 'How do I read the map?',
+        a: 'Every bubble is one fishing spot, the number is its current score, the colour is the score band (red poor, green good). Tap a bubble to open the panel with the 48-hour strip, the best window and an explanation of why the score is what it is.',
+      },
+      'best-window': {
+        q: 'What is the “best window”?',
+        a: 'The three consecutive hours in the next 24 with the highest average score. If it is not today, we show tomorrow’s hours. The window is also marked on the 48-hour strip.',
+      },
+      'add-spot': {
+        q: 'How do I add a spot that is not on the map?',
+        a: 'Public spots are still added by hand: send us the name, coordinates and what is caught there. Owners of paid ponds add their pond directly from the account; it appears after review.',
+      },
+      'reports-how': {
+        q: 'How do reports work?',
+        a: 'In the spot panel, tap the speech-bubble button and mark how active the fish are. Reports from the last 7 days shift the spot’s score by up to ±15 points; a report loses half its weight every 48 hours. You can send one report per spot every 30 minutes. Three flags hide a report.',
+      },
+      'why-changed': {
+        q: 'It was 74 this morning, now it is 52. Why?',
+        a: 'The score is hourly and changes for two reasons: time moved on (for example the dawn window ended and midday arrived) or the forecast was updated (pressure, wind, cloud). “Why?” in the panel shows exactly which factor changed.',
+      },
+      sources: {
+        q: 'Where does the data come from?',
+        a: 'Weather and sea from Open-Meteo (measured and forecast), sun and moon from astronomical calculation, the map from OpenStreetMap and OpenFreeMap. Water temperature in lakes and rivers and the water level are estimated by our model and marked as such.',
+      },
+      'update-frequency': {
+        q: 'How often does it update?',
+        a: 'Weather data once an hour. The score is recomputed every 5 minutes for the current time. Reports every 10 minutes. Spot pages show the last computed score on load and switch to live data within seconds.',
+      },
+      'how-accurate': {
+        q: 'How accurate is the forecast?',
+        a: 'Honestly: this is an early version of the model. The weights come from experience, not yet from real catches. That is why every factor is shown separately, so you can see what the number rests on. Every report and every logged catch makes the model better.',
+      },
+      confidence: {
+        q: 'What does “confidence” mean?',
+        a: 'How much we trust the score itself. Low: the data is old (over 3 hours). Medium: fresh weather but no confirmation from anglers. High: at least 3 reports from this spot in the last week.',
+      },
+      'water-temp': {
+        q: 'Is the water temperature measured?',
+        a: 'At sea, yes, from Open-Meteo Marine. In lakes and rivers, no: we estimate it from the mean air temperature of the last 7 days and the water body’s depth class. It is always marked “estimated”. Connecting gauges is on the roadmap.',
+      },
+      'is-it-allowed': {
+        q: 'Is fishing allowed here?',
+        a: 'The app cannot confirm that yet. Closed seasons, size limits and protected areas have not been verified with the Ministry of Environmental Protection and Agriculture, and every spot says so. Some spots (drinking-water reservoirs, Turtle Lake) are marked “information only”. Check an official source before you fish.',
+      },
+      'closed-seasons': {
+        q: 'When is the closed season?',
+        a: 'In Georgia fishing is restricted on most rivers and lakes in spring during spawning; the exact dates and water bodies are set yearly. We do not show these yet because we have no verified source. As soon as we get the official list, it will appear on every spot page.',
+      },
+      'protected-species': {
+        q: 'Which species are protected?',
+        a: 'Sturgeon (all species) is protected and may not be taken. The app shows it with a red mark and never as a target. If you catch one by accident, release it carefully. The list of other restrictions is awaiting verification.',
+      },
+      'paid-ponds': {
+        q: 'What is a paid pond?',
+        a: 'A private pond where fishing is allowed for a daily fee. On the map they have their own type, with the fee and contact details. Owners add their pond from the account; it is published after review.',
+      },
+      'account-needed': {
+        q: 'Do I need an account?',
+        a: 'No. The map, scores and spot pages work without one. An account is needed to send reports, log catches and save spots. Sign in with an email link or Google, no password.',
+      },
+      'saved-spots': {
+        q: 'How many spots can I save?',
+        a: 'Free: one, with alerts. Premium: unlimited. Saved spots appear in the account panel.',
+      },
+      privacy: {
+        q: 'What happens to my data?',
+        a: 'Catch records are private by default; you choose whether to make them public. Reports are public (with your name or anonymously). Your location is used only on your device to compute distances and is never sent to the server. Photos are stored in a public bucket.',
+      },
+      'what-is-premium': {
+        q: 'What is in Premium?',
+        a: 'A 7-day forecast and the week’s best windows, alerts (“score went above 80”), factor history with charts, side-by-side spot comparison, 7-day trip planning, offline maps and unlimited saved spots. The score, the map and all 9 factors are free and will stay free.',
+      },
+      'billing-how': {
+        q: 'How does billing work?',
+        a: 'Payments are not live yet. We plan to charge in GEL with Georgian and international cards, with a receipt by email. Pressing “Choose” puts you on the launch list, and you will hear first.',
+      },
+      'cancel-refund': {
+        q: 'Can I cancel? Do I get a refund?',
+        a: 'Cancel any time from your account, no questions asked; Premium stays active until the end of the paid period. If you change your mind within the first 14 days, we refund in full.',
+      },
+      expires: {
+        q: 'What happens when Premium expires?',
+        a: 'Your account returns to free: the map, the score, 48 hours and all factors stay. Of your saved spots the first stays active, the rest remain saved but alerts pause until you subscribe again. Your catch history is never deleted.',
+      },
+    },
+  },
+
+  pricing: {
+    eyebrow: 'Pricing',
+    title: 'The map and the score are always free',
+    lead: 'Premium adds depth: the whole week’s forecast, alerts for the best window and factor history. Prices in GEL, cancel anytime.',
+    productName: 'Ankesi Premium',
+    plans: {
+      monthly: {
+        name: 'Monthly',
+        sub: 'Flexible — cancel anytime',
+        desc: 'Full Premium for one month. Good if you fish only part of the season.',
+      },
+      annual: {
+        name: 'Annual',
+        sub: '',
+        desc: 'Best value: the whole season and the winter too. Two months free compared with monthly.',
+      },
+      week: {
+        name: 'Week pass',
+        sub: '7 days, no auto-renewal',
+        desc: 'In Georgia for a week? Full Premium for 7 days, no subscription.',
+      },
+    },
+    period: { month: 'month', year: 'year', week: 'week' },
+    perMonthEq: '{{price}} / month',
+    badges: { twoMonthsFree: '2 months free', forVisitors: 'For visitors' },
+    choose: 'Choose',
+    startFree: 'Start free',
+    goPremium: 'Get Premium',
+    keepFree: 'I will keep the free plan',
+    cancelAnytime: 'Cancel anytime, no questions asked.',
+    pricesNote: 'Payments are not live yet: choosing a plan puts you on the launch list.',
+    compareTitle: 'Free vs Premium',
+    compareLead:
+      'Today’s score for every spot, the 48-hour strip and all 9 factors are free and will stay free. Premium is for those who plan further ahead.',
+    feature: 'Feature',
+    free: 'Free',
+    premium: 'Premium',
+    included: 'Included',
+    notIncluded: 'Not included',
+    values: { one: '1', unlimited: 'Unlimited' },
+    features: {
+      map: 'Full map with 100+ spots',
+      todayScore: 'Today’s score for every spot',
+      factors: 'All 9 factors with weights',
+      window48: '48-hour strip and best window',
+      reports: 'Anglers’ reports and adding your own',
+      savedSpots: 'Saved spots',
+      forecast7: '7-day forecast and the week’s best windows',
+      alerts: 'Alerts: “score went above 80”',
+      factorHistory: 'Factor history with charts',
+      compare: 'Side-by-side spot comparison',
+      planner7: '7-day planning with drive times',
+      offline: 'Offline maps',
+      earlyAccess: 'New regions and features first',
+    },
+    paymentsTitle: 'Payment',
+    paymentsLead:
+      'We plan to charge in GEL with Georgian cards (TBC, Bank of Georgia) and international cards, with a receipt by email. Until payments go live, everything that exists today is free.',
+    faqTitle: 'Subscription questions',
+    moreFaq: 'All questions →',
+    finalTitle: 'Start free, go deeper with Premium',
+    finalLead: 'The score and the map are free for everyone, and that will not change. Premium is for planning the week ahead and never missing the best window.',
+  },
+
+  checkout: {
+    eyebrow: 'Premium',
+    title: 'Launch list',
+    lead: 'Payments are not live yet. Leave your email and you will be the first to know when Premium launches.',
+    plan: 'Chosen plan',
+    price: 'Price',
+    notify: 'We will write only about the launch. No spam.',
+    email: 'Your email',
+    submit: 'Join the list',
+    sentTitle: 'Thank you!',
+    sent: 'Your email is saved on this device. We will get in touch at launch.',
+    privacy: 'Your email is used for this notice only.',
+    back: 'Back to pricing',
+  },
+
+  reports: {
+    eyebrow: 'Community',
+    title: 'Anglers’ reports',
+    lead: 'Observations from the last 7 days on site: how active fish really were. This is what corrects the scores.',
+    noBackend: 'Community features are not enabled in this environment.',
+    empty: 'No reports in the last 7 days. Be the first: open a spot on the map and tap “Share conditions”.',
+    howTitle: 'How it works',
+    how1: 'Pick a spot on the map, tap the speech-bubble button and mark how active the fish are, from very poor to excellent. A note and a photo are optional.',
+    how2: 'Every report shifts the spot’s score by up to ±15 points and fades over 48 hours. Three reports raise confidence to “high”.',
+    add: 'Add a report on the map',
+    learnMore: 'More on the methodology',
+  },
+
+  notFound: {
+    title: 'There is no such page',
+    lead: 'The link may have changed or been mistyped. The map and the spot catalog are one tap away.',
+    toMap: 'Go to the map',
+    toSpots: 'Spot catalog',
+  },
+  og: {
+    today: 'today',
+    noScore: 'score coming soon',
+    outOf: '/ 100',
+  },
+
+  months: {
+    1: 'January',
+    2: 'February',
+    3: 'March',
+    4: 'April',
+    5: 'May',
+    6: 'June',
+    7: 'July',
+    8: 'August',
+    9: 'September',
+    10: 'October',
+    11: 'November',
+    12: 'December',
+  },
+
 }
 
 export default en

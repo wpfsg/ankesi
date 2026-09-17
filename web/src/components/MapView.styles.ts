@@ -24,24 +24,6 @@ export const MapRoot = styled.div`
     filter: invert(1) hue-rotate(180deg) brightness(0.85) saturate(0.7);
   }
 
-  /* MapLibre's stylesheet loads after ours with equal specificity, so these
-     need !important to hold in both themes. */
-  .maplibregl-ctrl-attrib,
-  .maplibregl-ctrl-attrib * {
-    color: var(--fg-2) !important;
-  }
-
-  .maplibregl-ctrl-attrib {
-    font-size: 10px;
-    background: var(--glass-bg) !important;
-    border-radius: 8px 0 0 0;
-  }
-
-  .maplibregl-ctrl-attrib-button {
-    filter: none;
-    background-color: var(--glass-line) !important;
-  }
-
   /* blue dot for the user's own position (plain element, see MapView) */
   [data-user-dot] {
     width: 16px;
@@ -147,15 +129,17 @@ export const MapRoot = styled.div`
   }
 `
 
-/* Zoom / locate / fit controls, bottom right above the attribution. On
-   desktop they slide left when the detail panel is open. */
+/* Zoom / locate / fit controls in a row along the bottom right, above the
+   attribution and clear of the vertical layer rail. On desktop they slide
+   left when the detail panel is open. */
 export const Controls = styled.div<{ $shift?: boolean }>`
   position: fixed;
   right: 12px;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 34px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--tabbar-h, 0px) + 12px);
   z-index: 14;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 8px;
   ${hideWhileSearching}
 
@@ -173,7 +157,7 @@ export const Controls = styled.div<{ $shift?: boolean }>`
 
 export const ZoomGroup = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   border-radius: 13px;
   overflow: hidden;
   background: var(--ctl-bg);
@@ -181,7 +165,7 @@ export const ZoomGroup = styled.div`
   border: 1px solid var(--brd);
 
   button {
-    width: 40px;
+    width: 42px;
     height: 38px;
     color: var(--fg-2);
     display: grid;
@@ -193,6 +177,6 @@ export const ZoomGroup = styled.div`
   }
 
   button + button {
-    border-top: 1px solid var(--brd);
+    border-left: 1px solid var(--brd);
   }
 `

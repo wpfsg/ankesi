@@ -5,16 +5,16 @@ import { Rail, RailGroup, RailItem, RailLabel, RailSwatch } from './LayerSwitche
 /** Vertical glass rail on the right edge with the base maps laid out
  *  directly; tapping one swaps the map style. */
 interface Props {
-  /** Desktop: slide left of the open detail panel. */
-  shift?: boolean
+  /** Hide while the spot detail panel is open. */
+  hidden?: boolean
 }
 
-export function LayerSwitcher({ shift }: Props) {
+export function LayerSwitcher({ hidden }: Props) {
   const { t } = useTranslation()
   const layer = useMapLayer()
 
   return (
-    <Rail $shift={shift} aria-label={t('layers.title')}>
+    <Rail $hidden={hidden} aria-label={t('layers.title')}>
       <RailGroup role="radiogroup" aria-label={t('layers.title')}>
         {MAP_LAYERS.map((l) => (
           <RailItem

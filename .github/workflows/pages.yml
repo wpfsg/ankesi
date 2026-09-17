@@ -3,6 +3,9 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  # Rebuild daily so prerendered scores and Open Graph cards stay current.
+  schedule:
+    - cron: '0 3 * * *'
   workflow_dispatch:
 
 permissions:
@@ -34,10 +37,14 @@ jobs:
 
       - run: npm ci
 
-      - name: Build
+      - name: Build, prerender and render Open Graph cards
         env:
-          # Project site lives under /ankesi/. With a custom domain, set this to "/".
+          # Project site lives under /ankesi/. With a custom domain, set this to "/"
+          # and VITE_SITE_ORIGIN to the domain.
           VITE_BASE: /ankesi/
+          VITE_SITE_ORIGIN: https://wpfsg.github.io
+          # Preinstalled on ubuntu-latest; scripts/og.mjs renders cards with it.
+          CHROME_PATH: /usr/bin/google-chrome
           # Optional: add these as repository secrets to enable accounts.
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}

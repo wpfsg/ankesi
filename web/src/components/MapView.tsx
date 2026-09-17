@@ -197,7 +197,7 @@ export function MapView({ spots, results, layer, selectedId, onSelect, onReady, 
       style: vectorStyleUrl(initial),
       bounds: GEORGIA_BOUNDS,
       fitBoundsOptions: { padding: { top: 120, bottom: 60, left: 30, right: 30 } },
-      attributionControl: { compact: true },
+      attributionControl: false,
       dragRotate: false,
       pitchWithRotate: false,
     })
@@ -316,18 +316,6 @@ export function MapView({ spots, results, layer, selectedId, onSelect, onReady, 
     <>
       <MapRoot ref={container} data-layer={layer} data-keep-colors={layerDef(layer).keepColors || undefined} />
       <Controls $shift={shiftControls} aria-label={t('map.controls')}>
-        <CtlBtn type="button" onClick={() => void flyToUser()} aria-label={t('map.locate')} title={t('map.locate')} aria-busy={locating}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="3" />
-            <circle cx="12" cy="12" r="8" />
-            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
-          </svg>
-        </CtlBtn>
-        <CtlBtn type="button" onClick={fitGeorgia} aria-label={t('map.fitAll')} title={t('map.fitAll')}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-          </svg>
-        </CtlBtn>
         <ZoomGroup>
           <button type="button" onClick={() => mapRef.current?.zoomIn()} aria-label={t('map.zoomIn')} title={t('map.zoomIn')}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
@@ -340,6 +328,18 @@ export function MapView({ spots, results, layer, selectedId, onSelect, onReady, 
             </svg>
           </button>
         </ZoomGroup>
+        <CtlBtn type="button" onClick={() => void flyToUser()} aria-label={t('map.locate')} title={t('map.locate')} aria-busy={locating}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" />
+            <circle cx="12" cy="12" r="8" />
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+          </svg>
+        </CtlBtn>
+        <CtlBtn type="button" onClick={fitGeorgia} aria-label={t('map.fitAll')} title={t('map.fitAll')}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+          </svg>
+        </CtlBtn>
       </Controls>
     </>
   )

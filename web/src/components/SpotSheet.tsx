@@ -1,15 +1,19 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { animate, useDragControls, useMotionValue, type PanInfo } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import type { FactorResult, Report, Spot, SpotResult } from '../types'
+import type { Report, Spot, SpotResult } from '../types'
 import { SPECIES } from '../data/species'
-import { bandOf, bestWindow, weakestFactor, MODEL_VERSION } from '../lib/scoring'
-import { estimateDriveMinutes, fmtSigned, fmtTime, haversineKm, tbilisiDateKey, tbilisiParts, timeAgo } from '../lib/format'
+import { bestWindow, weakestFactor, MODEL_VERSION } from '../lib/scoring'
+import { estimateDriveMinutes, fmtSigned, fmtTime, haversineKm, timeAgo } from '../lib/format'
+import { paths } from '../lib/routes'
+import { absoluteUrl } from '../lib/site'
 import { useOrigin } from '../lib/origin'
 import { photoUrl } from '../lib/supabase'
 import { ScoreStrip } from './ScoreStrip'
 import { FactorList } from './FactorList'
-import { rawLabel } from '../lib/factorLabel'
+import { ScoreHero } from './score/ScoreHero'
+import { BestWindowCard } from './score/BestWindowCard'
+import { FactorImpacts } from './score/FactorImpacts'
 import {
   Btn,
   CloseBtn,
@@ -30,21 +34,9 @@ import {
   Body,
   HeadText,
   InfoOnly,
-  Hero,
-  ScoreRing,
-  RingValue,
-  HeroMeta,
-  BandLabel,
-  BandSummary,
-  ConfChip,
   SummaryBox,
-  BestCard,
   H4,
   Disclosure,
-  ImpactList,
-  ImpactRow,
-  ImpactIcon,
-  ImpactText,
   TextBtn,
   DisclosureBody,
   ReportItem,
@@ -99,19 +91,6 @@ function useMediaQuery(query: string) {
   }, [query])
   return matches
 }
-
-/** How far a factor pulls the score from neutral, weighted. */
-function impact(f: FactorResult): number {
-  return Math.abs(f.value - 0.5) * f.weight
-}
-
-function toneOf(f: FactorResult): 'up' | 'down' | 'flat' {
-  if (f.value >= 0.6) return 'up'
-  if (f.value <= 0.4) return 'down'
-  return 'flat'
-}
-
-const TONE_MARK = { up: '↑', down: '↓', flat: '•' } as const
 
 /* Icons ------------------------------------------------------------------- */
 
@@ -229,13 +208,13 @@ export function SpotSheet({ spot, result, reports, saved, manualPressure, onManu
   }
 
   const now = result?.hours[0]
-  const band = bandOf(now?.score)
   const weakest = now ? weakestFactor(now) : null
   const window48 = result ? bestWindow(result.hours) : null
   const name = lang === 'ka' ? spot.nameKa : spot.nameEn
   const speciesList = Object.entries(spot.species).sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
   const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${spot.lat},${spot.lon}`
-  const topFactors = now ? [...now.factors].sort((a, b) => impact(b) - impact(a)).slice(0, 5) : []
+  /** The spot's own page: it carries the Open Graph card for group chats. */
+  const pageUrl = absoluteUrl(paths.spot(lang, spot.id))
 
   const driveMin = estimateDriveMinutes(haversineKm(origin.lat, origin.lon, spot.lat, spot.lon))
   const driveLabel =
@@ -243,18 +222,16 @@ export function SpotSheet({ spot, result, reports, saved, manualPressure, onManu
       ? t('trip.driveTimeHours', { h: Math.floor(driveMin / 60), min: driveMin % 60 })
       : t('trip.driveTime', { min: driveMin })
 
-  const bestIsToday = window48 ? tbilisiParts(window48.start).dateKey === tbilisiDateKey(0) : false
-
   const flag = (id: string) => {
     setFlagged((s) => new Set(s).add(id))
     onFlag(id)
   }
 
   const share = async () => {
-    const url = window.location.href
+    const url = pageUrl
     try {
       if (navigator.share) {
-        await navigator.share({ title: name, url })
+        await navigator.share({ title: name, text: now ? `${name} · ${now.score}` : name, url })
         return
       }
       await navigator.clipboard.writeText(url)
@@ -288,18 +265,11 @@ export function SpotSheet({ spot, result, reports, saved, manualPressure, onManu
         </InfoOnly>
       )}
 
-      <Hero onClick={() => !desktop && snap === 'peek' && goTo('half')}>
-        <ScoreRing data-band={band} style={{ '--pct': `${now?.score ?? 0}%` } as CSSProperties}>
-          <RingValue>{now ? now.score : '·'}</RingValue>
-        </ScoreRing>
-        <HeroMeta data-band={band}>
-          <BandLabel>{t(`band.${band}`)}</BandLabel>
-          <BandSummary>{t(`summary.${band}`)}</BandSummary>
-          <ConfChip>
-            {t('confidence.label')}: {t(`confidence.${result?.confidence ?? 'low'}`)}
-          </ConfChip>
-        </HeroMeta>
-      </Hero>
+      <ScoreHero
+        score={now?.score}
+        confidence={result?.confidence ?? 'low'}
+        onClick={() => !desktop && snap === 'peek' && goTo('half')}
+      />
 
       {(weakest || result?.community) && (
         <SummaryBox>
@@ -316,15 +286,7 @@ export function SpotSheet({ spot, result, reports, saved, manualPressure, onManu
         </SummaryBox>
       )}
 
-      {window48 && (
-        <BestCard>
-          <small>{bestIsToday ? t('sheet.bestToday') : t('sheet.bestUpcoming')}</small>
-          <b>
-            {fmtTime(window48.start, lang)} – {fmtTime(window48.end, lang)}
-          </b>
-          <i>{t('sheet.bestWindowNote', { avg: window48.avg })}</i>
-        </BestCard>
-      )}
+      {window48 && <BestWindowCard best={window48} lang={lang} />}
 
       {result && now && (
         <>
@@ -333,31 +295,7 @@ export function SpotSheet({ spot, result, reports, saved, manualPressure, onManu
 
           <Disclosure open>
             <summary>{t('sheet.whyScore', { score: now.score })}</summary>
-            <ImpactList>
-              {topFactors.map((f) => {
-                const tone = toneOf(f)
-                const raw = rawLabel(f)
-                const tail = tone === 'up' ? t('sheet.helps') : tone === 'down' ? t(`hint.${f.key}`) : ''
-                return (
-                  <ImpactRow key={f.key}>
-                    <ImpactIcon $tone={tone} aria-hidden="true">
-                      {TONE_MARK[tone]}
-                    </ImpactIcon>
-                    <ImpactText>
-                      <b>
-                        {t(`factor.${f.key}`)}
-                        {f.state ? ` · ${t(`state.${f.state}`)}` : ''}
-                      </b>
-                      <span>
-                        {raw}
-                        {raw && tail ? ' — ' : ''}
-                        {tail}
-                      </span>
-                    </ImpactText>
-                  </ImpactRow>
-                )
-              })}
-            </ImpactList>
+            <FactorImpacts factors={now.factors} />
             <TextBtn type="button" onClick={() => setAllFactors((v) => !v)} aria-expanded={allFactors}>
               {allFactors ? t('sheet.hideFactors') : t('sheet.showAllFactors', { count: now.factors.length })}
             </TextBtn>

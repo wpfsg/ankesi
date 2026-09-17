@@ -15,6 +15,32 @@ export const glass = css`
   }
 `
 
+/** iOS-style liquid glass for larger slabs (planner, cards, footer): heavier
+ *  blur and saturation, a bright top edge and a soft layered shadow. */
+export const liquidGlass = css`
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+  backdrop-filter: blur(28px) saturate(1.8);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.14),
+    0 2px 6px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.2);
+
+  :root[data-theme='dark'] & {
+    box-shadow:
+      0 14px 40px rgba(0, 0, 0, 0.5),
+      0 2px 6px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background: var(--glass-bg-strong);
+  }
+`
+
 export const tabular = css`
   font-variant-numeric: tabular-nums;
 `
@@ -431,6 +457,13 @@ export const ScoreSquare = styled.span`
   ${tabular}
   flex: 0 0 auto;
   box-shadow: 0 2px 6px rgba(15, 23, 32, 0.18);
+
+  /* The mid bands are light; dark digits keep the contrast above 4.5:1. */
+  &[data-band='slow'],
+  &[data-band='ok'],
+  &[data-band='good'] {
+    color: #0f1720;
+  }
 `
 
 /** Primary call-to-action (solid green). */

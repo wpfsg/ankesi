@@ -1,4 +1,5 @@
 import styled, { css } from "styled-components";
+import { Link } from "react-router";
 import { glass, tabular } from "../styles/shared";
 
 export const HeaderRoot = styled.header`
@@ -52,6 +53,19 @@ export const HeaderActions = styled.div`
   }
 `;
 
+/* Brand plus, on wide screens, the primary links in one grid column. */
+export const BrandCol = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  flex: none;
+
+  @media (min-width: 720px) {
+    justify-self: start;
+  }
+`;
+
 export const Brand = styled.div`
   display: flex;
   align-items: center;
@@ -60,9 +74,40 @@ export const Brand = styled.div`
   font-weight: 700;
   font-size: 17px;
   color: var(--fg);
+  text-decoration: none;
+`;
+
+export const NavSlot = styled.nav`
+  display: none;
+
+  @media (min-width: 1100px) {
+    display: block;
+    margin-left: 8px;
+  }
+`;
+
+/** The one primary call to action in the header. */
+export const PremiumLink = styled(Link)`
+  display: none;
 
   @media (min-width: 720px) {
-    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px;
+    padding: 0 16px;
+    border-radius: 999px;
+    background: var(--pri);
+    color: var(--pri-fg);
+    font-weight: 650;
+    font-size: 14px;
+    text-decoration: none;
+    box-shadow: var(--pri-shadow);
+    white-space: nowrap;
+
+    &:hover {
+      filter: brightness(1.05);
+    }
   }
 `;
 
@@ -170,34 +215,36 @@ export const Avatar = styled.span`
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: var(--pri-fg);
-  color: var(--pri);
+  background: var(--pri);
+  color: var(--pri-fg);
   font-size: 12px;
   font-weight: 700;
 `
 
+/* Secondary on purpose: the header has one primary action, Premium. On
+   phones the tab bar carries Account, so the button is hidden there. */
 export const AccountBtn = styled.button`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 40px;
-  min-width: 40px;
-  padding: 0 10px;
-  flex: none;
-  border-radius: 999px;
-  background: var(--pri);
-  color: var(--pri-fg);
-  font-weight: 600;
-  font-size: 14px;
-  box-shadow: var(--pri-shadow);
-
-  &:hover {
-    filter: brightness(1.05);
-  }
+  display: none;
 
   @media (min-width: 720px) {
-    padding: 0 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 38px;
+    min-width: 38px;
+    padding: 0 14px;
+    flex: none;
+    border-radius: 999px;
+    border: 1px solid var(--brd);
+    background: var(--ctl-bg);
+    color: var(--fg-2);
+    font-weight: 600;
+    font-size: 14px;
+
+    &:hover {
+      color: var(--fg);
+    }
   }
 `
 

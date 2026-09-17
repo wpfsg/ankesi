@@ -3,7 +3,7 @@ import { hideWhileSearching } from '../styles/shared'
 
 /* iOS-style liquid glass: heavy blur and saturation, a bright top edge and
    a soft outer shadow so the rail reads as a floating slab over the map. */
-export const Rail = styled.nav<{ $shift?: boolean }>`
+export const Rail = styled.nav<{ $hidden?: boolean }>`
   position: fixed;
   right: 10px;
   top: 50%;
@@ -30,19 +30,16 @@ export const Rail = styled.nav<{ $shift?: boolean }>`
   }
 
   ${hideWhileSearching}
+  ${(p) =>
+    p.$hidden &&
+    css`
+      display: none;
+    `}
 
   @media (max-width: 480px) {
     right: 8px;
     padding: 5px;
     border-radius: 26px;
-  }
-  @media (min-width: 720px) {
-    transition: right 220ms var(--spring);
-    ${(p) =>
-      p.$shift &&
-      css`
-        right: 416px;
-      `}
   }
 `
 

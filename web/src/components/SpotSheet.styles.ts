@@ -1,6 +1,6 @@
 import styled, { css } from 'styled-components'
 import { motion } from 'framer-motion'
-import { bandVar, Muted, Panel, PanelFooter, PanelScroll, PrimaryBtn } from '../styles/shared'
+import { Muted, Panel, PanelFooter, PanelScroll, PrimaryBtn } from '../styles/shared'
 
 const PHONE = '@media (max-width: 719.98px)'
 
@@ -72,88 +72,6 @@ export const InfoOnly = styled.div`
   margin-bottom: 10px;
 `
 
-/* Hero -------------------------------------------------------------------- */
-
-export const Hero = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 2px 0 12px;
-`
-
-/** Conic score ring; band from data-band, fill from --pct inline. */
-export const ScoreRing = styled.div`
-  ${bandVar}
-  --pct: 0%;
-  position: relative;
-  width: 76px;
-  height: 76px;
-  flex: none;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: conic-gradient(var(--band) 0 var(--pct), var(--ring-track) var(--pct));
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 7px;
-    border-radius: 50%;
-    background: var(--srf);
-  }
-
-  ${PHONE} {
-    width: 64px;
-    height: 64px;
-  }
-`
-
-export const RingValue = styled.span`
-  position: relative;
-  z-index: 2;
-  font-size: 25px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--band);
-  font-variant-numeric: tabular-nums;
-
-  ${PHONE} {
-    font-size: 21px;
-  }
-`
-
-export const HeroMeta = styled.div`
-  ${bandVar}
-  flex: 1;
-  min-width: 0;
-`
-
-export const BandLabel = styled.h3`
-  margin: 0;
-  font-size: 19px;
-  font-weight: 650;
-  line-height: 1.1;
-  color: var(--band);
-`
-
-export const BandSummary = styled.p`
-  margin: 3px 0 0;
-  font-size: 13px;
-  color: var(--fg-2);
-`
-
-export const ConfChip = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 6px;
-  padding: 3px 9px;
-  border-radius: 999px;
-  font-size: 12px;
-  color: var(--fg-2);
-  background: var(--ctl-bg-2);
-`
-
 /* Cards ------------------------------------------------------------------- */
 
 export const SummaryBox = styled.div`
@@ -165,36 +83,6 @@ export const SummaryBox = styled.div`
   background: var(--srf-2);
   border: 1px solid var(--brd);
   border-radius: var(--r-row);
-`
-
-export const BestCard = styled.div`
-  margin-top: 10px;
-  padding: 12px 13px;
-  border-radius: var(--r-row);
-  border: 1px solid var(--best-brd);
-  background: var(--best-bg);
-
-  small {
-    display: block;
-    font-size: 11.5px;
-    font-weight: 600;
-    color: var(--best-fg);
-  }
-
-  b {
-    display: block;
-    margin-top: 2px;
-    font-size: 18px;
-    font-weight: 650;
-    font-variant-numeric: tabular-nums;
-  }
-
-  i {
-    display: block;
-    font-style: normal;
-    font-size: 12.5px;
-    color: var(--best-fg);
-  }
 `
 
 export const H4 = styled.h4`
@@ -243,64 +131,6 @@ export const Disclosure = styled.details`
 
   &[open] summary::after {
     transform: rotate(-135deg);
-  }
-`
-
-export const ImpactList = styled.div`
-  padding: 0 13px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-`
-
-export const ImpactRow = styled.div`
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-`
-
-export const ImpactIcon = styled.span<{ $tone: 'up' | 'down' | 'flat' }>`
-  width: 22px;
-  height: 22px;
-  flex: none;
-  border-radius: 7px;
-  display: grid;
-  place-items: center;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1;
-  background: var(--ctl-bg-2);
-  color: var(--fg-3);
-
-  ${(p) =>
-    p.$tone === 'up' &&
-    css`
-      background: var(--up-bg);
-      color: var(--up-fg);
-    `}
-  ${(p) =>
-    p.$tone === 'down' &&
-    css`
-      background: var(--down-bg);
-      color: var(--down-fg);
-    `}
-`
-
-export const ImpactText = styled.div`
-  flex: 1;
-  min-width: 0;
-
-  b {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-  }
-
-  span {
-    display: block;
-    font-size: 12.5px;
-    line-height: 1.35;
-    color: var(--fg-2);
   }
 `
 

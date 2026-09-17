@@ -81,3 +81,15 @@ export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: numb
 export function estimateDriveMinutes(km: number): number {
   return Math.round(((km * 1.3) / 55) * 60)
 }
+
+/** Price in lari: "4,99 ₾" in Georgian, "4.99 ₾" in English. Formatted by
+ *  hand so prerendered and browser output match regardless of ICU data. */
+export function fmtGel(n: number, lang: string): string {
+  const s = n.toFixed(2)
+  return `${lang === 'ka' ? s.replace('.', ',') : s} ₾`
+}
+
+/** Whole kilometres, e.g. "12 km" (unit label comes from i18n). */
+export function fmtKm(km: number): string {
+  return String(Math.round(km))
+}

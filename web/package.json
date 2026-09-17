@@ -5,9 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && npm run prerender && npm run og",
+    "build:client": "tsc -b && vite build",
+    "prerender": "vite build --ssr src/entry-server.tsx --outDir dist-ssr && node scripts/prerender.mjs",
+    "og": "node scripts/og.mjs",
+    "shots": "node scripts/shots.mjs",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "serve": "node scripts/serve.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",
@@ -17,6 +22,7 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-i18next": "^17.0.14",
+    "react-router": "^7.18.4",
     "styled-components": "^6.5.3",
     "suncalc": "^2.0.2"
   },

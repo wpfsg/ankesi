@@ -5,19 +5,21 @@ import en from './en'
 
 export type Lang = 'ka' | 'en'
 export const LANGS: Lang[] = ['ka', 'en']
+export const DEFAULT_LANG: Lang = 'ka'
 
 const STORAGE_KEY = 'ankesi.lang'
+const isBrowser = typeof window !== 'undefined'
 
 /** Deployment base path without trailing slash: "" locally, "/ankesi" on
  *  the GitHub project page. */
 export const BASE = import.meta.env.BASE_URL.replace(/\/$/, '')
 
-function isLang(v: unknown): v is Lang {
+export function isLang(v: unknown): v is Lang {
   return v === 'ka' || v === 'en'
 }
 
 /** Path without the deployment base, e.g. "/en/foo". */
-function appPath(pathname: string): string {
+export function appPath(pathname: string): string {
   return BASE && pathname.startsWith(BASE) ? pathname.slice(BASE.length) || '/' : pathname
 }
 
@@ -26,10 +28,10 @@ export function langPath(lang: Lang): string {
   return `${BASE}/${lang}`
 }
 
-/** URL path prefix wins, then saved choice, then browser language, then Georgian. */
-export function detectLang(): Lang {
-  const first = appPath(window.location.pathname).split('/')[1]
-  if (isLang(first)) return first
+/** Language the browser should start in when the URL has no prefix: saved
+ *  choice, then browser language, then Georgian. */
+export function preferredLang(): Lang {
+  if (!isBrowser) return DEFAULT_LANG
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (isLang(saved)) return saved
@@ -38,27 +40,30 @@ export function detectLang(): Lang {
   }
   const nav = (navigator.language || '').toLowerCase()
   if (nav.startsWith('en')) return 'en'
-  return 'ka'
+  return DEFAULT_LANG
 }
 
-/** Reflect the language in <html lang>, storage, and the URL prefix. */
+/** URL path prefix wins, then the preferred language. */
+export function detectLang(): Lang {
+  if (!isBrowser) return DEFAULT_LANG
+  const first = appPath(window.location.pathname).split('/')[1]
+  if (isLang(first)) return first
+  return preferredLang()
+}
+
+/** Reflect the language in <html lang> and storage. The router owns the URL. */
 export function applyLang(lang: Lang) {
+  if (!isBrowser) return
   document.documentElement.lang = lang
   try {
     localStorage.setItem(STORAGE_KEY, lang)
   } catch {
     // storage unavailable
   }
-  const { pathname, search, hash } = window.location
-  const rest = appPath(pathname).replace(/^\/(ka|en)(?=\/|$)/, '').replace(/^\/$/, '')
-  const next = `${langPath(lang)}${rest}${search}${hash}`
-  if (next !== `${pathname}${search}${hash}`) {
-    window.history.replaceState(null, '', next)
-  }
 }
 
 export function setLang(lang: Lang) {
-  void i18n.changeLanguage(lang)
+  if (i18n.language !== lang) void i18n.changeLanguage(lang)
   applyLang(lang)
 }
 
@@ -68,11 +73,11 @@ void i18n.use(initReactI18next).init({
     en: { translation: en },
   },
   lng: detectLang(),
-  fallbackLng: 'ka',
+  fallbackLng: DEFAULT_LANG,
   interpolation: { escapeValue: false },
   returnNull: false,
 })
 
-applyLang(isLang(i18n.language) ? i18n.language : 'ka')
+applyLang(isLang(i18n.language) ? i18n.language : DEFAULT_LANG)
 
 export default i18n

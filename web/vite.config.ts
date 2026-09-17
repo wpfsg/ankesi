@@ -1,30 +1,11 @@
-import { copyFileSync, existsSync } from 'node:fs'
-import { resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
-import { defineConfig, type Plugin } from 'vite'
-
-/** GitHub Pages has no SPA rewrites; serving index.html as 404.html lets
- *  deep links like /ankesi/en load the app. */
-function spaFallback(): Plugin {
-  let outDir = 'dist'
-  return {
-    name: 'spa-404-fallback',
-    apply: 'build',
-    configResolved(c) {
-      outDir = c.build.outDir
-    },
-    closeBundle() {
-      const index = resolve(outDir, 'index.html')
-      if (existsSync(index)) copyFileSync(index, resolve(outDir, '404.html'))
-    },
-  }
-}
+import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig({
   // "/" locally and on a custom domain; "/ankesi/" on the GitHub project page.
   base: process.env.VITE_BASE ?? '/',
-  plugins: [react(), spaFallback()],
+  plugins: [react()],
   optimizeDeps: {
     // MapLibre loads its web worker via import.meta.url; pre-bundling breaks
     // that path in dev, so leave the package alone.
@@ -32,5 +13,14 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 1600,
+  },
+  // `vite build --ssr src/entry-server.tsx` produces the renderer that
+  // scripts/prerender.mjs runs. Dependencies stay external and load from
+  // node_modules in Node.
+  ssr: {
+    target: 'node',
+    // styled-components ships CJS whose default export does not interop
+    // cleanly from Node ESM; bundling it into the renderer avoids that.
+    noExternal: ['styled-components'],
   },
 })
